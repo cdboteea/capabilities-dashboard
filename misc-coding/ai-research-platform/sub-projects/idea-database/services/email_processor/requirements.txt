@@ -1,0 +1,58 @@
+# Email Processing
+google-api-python-client==2.111.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
+google-auth==2.24.0
+
+# Database
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.23
+asyncpg==0.29.0
+
+# HTTP and API
+fastapi==0.104.1
+uvicorn==0.24.0
+httpx==0.25.2
+requests==2.31.0
+aiohttp==3.9.4
+
+# Data Processing
+pydantic==2.5.0
+pydantic-settings==2.1.0
+PyYAML==6.0.1
+
+# Utilities
+python-multipart==0.0.6
+email-validator==2.1.0
+python-dateutil==2.8.2
+
+# Logging and Monitoring
+structlog==23.2.0
+
+# AI/LLM Integration
+openai==1.3.7
+
+# Phase 1: Enhanced Attachment Storage
+# Google Drive API (already have google-api-python-client)
+google-api-core==2.14.0
+
+# Markdown Conversion Pipeline
+PyMuPDF==1.23.26        # PDF processing and text extraction
+python-docx==1.1.0      # Word document processing
+python-pptx==0.6.23     # PowerPoint processing
+markdownify==0.11.6     # HTML to markdown conversion
+beautifulsoup4==4.12.2  # HTML parsing
+lxml==4.9.3             # XML/HTML parser
+
+# Image Processing and OCR
+numpy==1.26.4          # Pin to compatible version for OpenCV 4.8
+Pillow==10.1.0          # Image processing
+pytesseract==0.3.10     # OCR for images
+opencv-python==4.8.1.78 # Image preprocessing
+
+# File Processing
+python-magic==0.4.27    # File type detection
+chardet==5.2.0          # Character encoding detection
+pypdf==3.17.1           # Additional PDF processing
+
+# Note: hashlib, pathlib, mimetypes are built-in modules 

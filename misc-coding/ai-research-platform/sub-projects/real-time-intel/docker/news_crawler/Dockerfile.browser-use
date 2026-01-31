@@ -1,0 +1,47 @@
+FROM python:3.11-slim
+
+# Install system dependencies for Browser-Use + Playwright
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    gnupg \
+    chromium \
+    chromium-driver \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PLAYWRIGHT_BROWSERS_PATH=/browsers
+ENV DISPLAY=:99
+
+# Create non-root user for security
+RUN useradd -m -u 1001 newsbot && \
+    mkdir -p /app /app/cache /app/config /app/data /browsers && \
+    chown -R newsbot:newsbot /app /browsers
+
+# Install Python dependencies
+COPY requirements.browser-use.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.browser-use.txt
+
+# Install Playwright browsers
+RUN playwright install chromium && \
+    chown -R newsbot:newsbot /browsers
+
+# Copy application code
+COPY src/ /app/src/
+COPY config/ /app/config/
+
+# Set working directory and user
+WORKDIR /app
+USER newsbot
+
+# Expose port
+EXPOSE 8300
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8300/v1/health || exit 1
+
+# Start the service
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8300", "--reload"] 

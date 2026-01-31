@@ -1,0 +1,135 @@
+# Email Processing Pipeline - Docker Compose Configuration
+#
+# 📋 PIPELINE REFERENCE: See docs/EMAIL_PROCESSING_PIPELINE.md for complete architecture
+#
+# This compose file deploys the 5-service email processing pipeline:
+# 1. email_processor (port 3003) - Gmail integration & API orchestration  
+# 2. ai_processor (port 8001) - LLM entity extraction via Mac Studio
+# 3. content_extractor (port 8002) - File processing & Drive uploads
+# 4. pre_processor (port 8003) - Text normalization services
+# 5. web_interface (port 3000) - React frontend dashboard
+#
+# External Dependencies: ai_platform_postgres, Mac Studio LLM, Gmail/Drive APIs
+
+version: '3.8'
+
+services:
+  # Email Processor - Handles Gmail API integration
+  email_processor:
+    build: ./services/email_processor
+    container_name: idea_db_email_processor
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - CHROMA_URL=http://ai_platform_chroma:8000
+      - MINIO_ENDPOINT=ai_platform_minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=${MINIO_PASSWORD:-minio_dev_password}
+      - MAC_STUDIO_ENDPOINT=${MAC_STUDIO_ENDPOINT:-https://matiass-mac-studio.tail174e9b.ts.net/v1}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-deepseek-r1}
+      # Google Drive Integration (OAuth-only - service account disabled)
+      - DRIVE_SERVICE_ACCOUNT_PATH=/app/config/drive_service_account_DISABLED.json
+      - DRIVE_FOLDER_NAME=idea-database-attachments
+    volumes:
+      - ./config:/app/config:ro
+      - ../../config:/app/evaluation_config:ro
+      - ./gmail_credentials:/app/credentials
+    networks:
+      - ai_platform
+    ports:
+      - "3003:8000"
+    depends_on:
+      - content_extractor
+    restart: unless-stopped
+
+  # Content Extractor - Processes URLs and attachments
+  content_extractor:
+    build: ./services/content_extractor
+    container_name: idea_db_content_extractor
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - MINIO_ENDPOINT=ai_platform_minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=${MINIO_PASSWORD:-minio_dev_password}
+      - EMAIL_PROCESSOR_HOST=idea_db_email_processor
+    volumes:
+      - ./config:/app/config:ro
+      - temp_downloads:/app/temp
+    networks:
+      - ai_platform
+    ports:
+      - "3005:8000"
+    restart: unless-stopped
+
+  # AI Processor - Entity extraction and categorization
+  ai_processor:
+    build: ./services/ai_processor
+    container_name: idea_db_ai_processor
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - CHROMA_URL=http://ai_platform_chroma:8000
+      - MAC_STUDIO_ENDPOINT=${MAC_STUDIO_ENDPOINT:-https://matiass-mac-studio.tail174e9b.ts.net/v1}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-deepseek-r1}
+      - REASONING_MODEL=${REASONING_MODEL:-deepseek-r1}
+    volumes:
+      - ./config:/app/config:ro
+    networks:
+      - ai_platform
+    ports:
+      - "3004:8000"
+    restart: unless-stopped
+
+  # Web Interface - React Dashboard
+  web_interface:
+    build: ./services/web_interface
+    container_name: idea_db_web_interface
+    networks:
+      - ai_platform
+    ports:
+      - "3002:3002"
+    depends_on:
+      - email_processor
+      - ai_processor
+      - content_extractor
+    restart: unless-stopped
+
+  # Daily Processor - Scheduled workflow orchestration (disabled - no Dockerfile)
+  # daily_processor:
+  #   build: ./workflows
+  #   container_name: idea_db_daily_processor
+  #   environment:
+  #     - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+  #     - EMAIL_PROCESSOR_URL=http://email_processor:8000
+  #     - AI_PROCESSOR_URL=http://ai_processor:8000
+  #   volumes:
+  #     - ./config:/app/config:ro
+  #   networks:
+  #     - ai_platform
+  #   depends_on:
+  #     - email_processor
+  #     - ai_processor
+  #   restart: unless-stopped
+
+  pre_processor:
+    build: ./services/pre_processor
+    container_name: idea_db_pre_processor
+    networks:
+      - ai_platform
+    ports:
+      - "3006:8000"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: idea_db_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ai_platform
+
+networks:
+  ai_platform:
+    external: true
+    name: airesearchplatform_ai_platform
+
+volumes:
+  temp_downloads: 

@@ -1,0 +1,64 @@
+# ⚠️ DEPRECATED: This file is no longer used for taxonomy definitions
+# 
+# The system now uses dynamic database-driven taxonomy from taxonomy_node_types and taxonomy_edge_types tables
+# This file is kept for reference only and will be removed in a future cleanup
+# 
+# 📚 For current taxonomy documentation, see:
+# - Live Taxonomy: Settings > Taxonomy tab in web interface (http://localhost:3002)
+# - Documentation: sub-projects/idea-database/KNOWLEDGE_GRAPH_TAXONOMY_REFERENCE.md
+# - Reset Guide: sub-projects/idea-database/INITIAL_MODERN_TAXONOMY_REFERENCE.md
+# - Full Index: sub-projects/idea-database/DOCUMENTATION_INDEX.md
+
+node_types:
+  - name: idea
+    definition: "A distinct concept, proposal, or insight."
+  - name: evidence
+    definition: "Data, citation, or claim supporting or refuting an idea."
+  - name: method
+    definition: "A process, technique, or approach."
+  - name: metric
+    definition: "A quantitative or qualitative measure."
+  - name: person
+    definition: "An individual human actor."
+  - name: organization
+    definition: "A group, company, or institution."
+  - name: concept
+    definition: "An abstract or domain-specific concept."
+  - name: technology
+    definition: "A tool, platform, or system."
+  - name: event
+    definition: "A notable occurrence or milestone."
+
+edge_types:
+  - name: is-a
+    definition: "Class/subclass or type hierarchy."
+  - name: part-of
+    definition: "Whole/segment or membership."
+  - name: supports
+    definition: "Evidence or claim supports an idea/claim."
+  - name: contradicts
+    definition: "Evidence or claim contradicts an idea/claim."
+  - name: inconclusive
+    definition: "Evidence is inconclusive for an idea/claim."
+  - name: leads-to
+    definition: "Causal or process flow."
+  - name: precedes
+    definition: "Temporal or sequential relationship."
+  - name: related-to
+    definition: "Semantic or similarity-based connection."
+  - name: task-for
+    definition: "Workflow or responsibility assignment."
+  - name: approved-by
+    definition: "Approval or validation relationship."
+
+excluded_types:
+  # These are common legacy/generic types NOT present in the current taxonomy
+  - category
+  - url
+  - sender
+  - entity
+  - location
+  - contains_url
+  - categorized_as
+  - sent_by
+  - Technology  # capitalized variant 

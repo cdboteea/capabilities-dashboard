@@ -1,0 +1,175 @@
+version: '3.8'
+
+services:
+  # Topic Manager - Entry point for research topics
+  topic_manager:
+    build: ./docker/topic_manager
+    container_name: twin_report_topic_manager
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - CHROMA_URL=http://ai_platform_chroma:8000
+      - REDIS_URL=redis://ai_platform_redis:6379/0
+      - MAC_STUDIO_ENDPOINT=${MAC_STUDIO_ENDPOINT:-https://matiass-mac-studio.tail174e9b.ts.net/v1}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-deepseek-r1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+    volumes:
+      - ./config:/app/config:ro
+      - twin_prompts:/app/prompts
+    networks:
+      - ai_platform
+    ports:
+      - "8100:8000"
+    restart: unless-stopped
+
+  # Local Reasoning Author - Mac Studio optimized models
+  author_local_reasoning:
+    build: ./sub-projects/twin-report-kb/docker/author_local_reasoning
+    container_name: twin_report_local_reasoning
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - MAC_STUDIO_ENDPOINT=${MAC_STUDIO_ENDPOINT:-https://matiass-mac-studio.tail174e9b.ts.net/v1}
+      - REASONING_MODEL=${REASONING_MODEL:-deepseek-r1}
+      - BACKUP_MODEL=${BACKUP_MODEL:-qwq-32b}
+    volumes:
+      - ./config:/app/config:ro
+      - twin_prompts:/app/prompts:ro
+      - local_models_cache:/app/models
+    networks:
+      - ai_platform
+    ports:
+      - "8105:8000"
+    restart: unless-stopped
+
+  # Document Parser - Chat exports, Google Docs, PDFs
+  document_parser:
+    build: ./sub-projects/twin-report-kb/docker/document_parser
+    container_name: twin_report_document_parser
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - CHROMA_URL=http://ai_platform_chroma:8000
+      - MINIO_ENDPOINT=ai_platform_minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=${MINIO_PASSWORD:-minio_dev_password}
+      - GOOGLE_DOCS_API_KEY=${GOOGLE_DOCS_API_KEY:-}
+    volumes:
+      - ./config:/app/config:ro
+      - ./uploads:/app/uploads
+      - google_creds:/app/credentials
+    networks:
+      - ai_platform
+    ports:
+      - "8101:8000"
+    restart: unless-stopped
+
+  # Quality Controller - Citation & fact verification
+  quality_controller:
+    build: ./sub-projects/twin-report-kb/docker/quality_controller
+    container_name: twin_report_quality_controller
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - MAC_STUDIO_ENDPOINT=${MAC_STUDIO_ENDPOINT:-https://matiass-mac-studio.tail174e9b.ts.net/v1}
+      - QC_MODEL=${QC_MODEL:-deepseek-r1}
+      - FACT_CHECK_API_KEY=${FACT_CHECK_API_KEY:-}
+      - CITATION_VERIFY_API_KEY=${CITATION_VERIFY_API_KEY:-}
+    volumes:
+      - ./config:/app/config:ro
+    networks:
+      - ai_platform
+    ports:
+      - "8104:8000"
+    restart: unless-stopped
+
+  # Diff Worker - Compare twin reports
+  diff_worker:
+    build: ./sub-projects/twin-report-kb/docker/diff_worker
+    container_name: twin_report_diff_worker
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - MAC_STUDIO_ENDPOINT=${MAC_STUDIO_ENDPOINT:-https://matiass-mac-studio.tail174e9b.ts.net/v1}
+      - DIFF_MODEL=${DIFF_MODEL:-deepseek-r1}
+    volumes:
+      - ./config:/app/config:ro
+      - twin_prompts:/app/prompts:ro
+    networks:
+      - ai_platform
+    ports:
+      - "8103:8000"
+    restart: unless-stopped
+
+  # Web Interface - Dashboard and search
+  web_interface:
+    build: ./sub-projects/twin-report-kb/docker/frontend
+    container_name: twin_report_web_interface
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - CHROMA_URL=http://ai_platform_chroma:8000
+      - TOPIC_MANAGER_URL=http://topic_manager:8000
+      - DOCUMENT_PARSER_URL=http://document_parser:8000
+    volumes:
+      - ./config:/app/config:ro
+    networks:
+      - ai_platform
+    ports:
+      - "8102:3000"
+    depends_on:
+      - topic_manager
+      - document_parser
+    restart: unless-stopped
+
+  # Redis for task queuing
+  redis:
+    image: redis:7-alpine
+    container_name: twin_report_redis
+    networks:
+      - ai_platform
+    volumes:
+      - twin_redis_data:/data
+    restart: unless-stopped
+
+  # Celery Worker - Distributed task processing
+  celery_worker:
+    build: ./docker/topic_manager
+    container_name: twin_report_celery_worker
+    command: celery -A app.celery worker --loglevel=info
+    environment:
+      - POSTGRES_URL=postgresql://ai_user:${DB_PASSWORD:-ai_platform_dev}@ai_platform_postgres:5432/ai_platform
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MAC_STUDIO_ENDPOINT=${MAC_STUDIO_ENDPOINT:-https://matiass-mac-studio.tail174e9b.ts.net/v1}
+    volumes:
+      - ./config:/app/config:ro
+      - twin_prompts:/app/prompts:ro
+    networks:
+      - ai_platform
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Celery Beat - Scheduled tasks
+  celery_beat:
+    build: ./docker/topic_manager
+    container_name: twin_report_celery_beat
+    command: celery -A app.celery beat --loglevel=info
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - ./config:/app/config:ro
+    networks:
+      - ai_platform
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+networks:
+  ai_platform:
+    external: true
+    name: airesearchplatform_ai_platform
+
+volumes:
+  twin_prompts:
+  twin_redis_data:
+  local_models_cache:
+  google_creds: 

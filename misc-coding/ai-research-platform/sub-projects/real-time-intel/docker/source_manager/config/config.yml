@@ -1,0 +1,99 @@
+service:
+  name: "source_manager"
+  version: "1.0.0"
+  host: "0.0.0.0"
+  port: 8302
+  debug: false
+  log_level: "INFO"
+
+database:
+  host: "real_time_intel_postgres"
+  port: 5432
+  name: "ai_platform"
+  user: "ai_user"
+  password: "ai_platform_2024"
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+
+llm:
+  endpoint: "${LLM_ENDPOINT:https://matiass-mac-studio.tail174e9b.ts.net/v1}"
+  model: "${LLM_MODEL:deepseek-r1}"
+  timeout: 60
+  max_retries: 3
+  temperature: 0.1
+
+source_evaluation:
+  # Scoring weights for source quality assessment
+  weights:
+    domain_authority: 0.25
+    content_quality: 0.30
+    bias_assessment: 0.20
+    reliability_score: 0.15
+    freshness_factor: 0.10
+  
+  # Quality thresholds
+  thresholds:
+    excellent: 0.85
+    good: 0.70
+    acceptable: 0.55
+    poor: 0.40
+  
+  # Content analysis parameters
+  content_analysis:
+    min_article_length: 100
+    max_article_length: 50000
+    sample_articles: 10
+    analysis_timeout: 30
+
+source_discovery:
+  # RSS feed discovery settings
+  rss_discovery:
+    max_feeds_per_domain: 5
+    discovery_timeout: 15
+    validation_timeout: 10
+  
+  # Source recommendation
+  recommendation:
+    similarity_threshold: 0.7
+    max_recommendations: 20
+    update_interval_hours: 24
+  
+  # Crawling limits
+  rate_limits:
+    requests_per_second: 2
+    concurrent_requests: 5
+    backoff_factor: 2
+
+monitoring:
+  health_check:
+    database_timeout: 5
+    llm_timeout: 10
+    external_service_timeout: 5
+  
+  metrics:
+    collection_interval: 60
+    retention_days: 30
+  
+  logging:
+    format: "json"
+    rotation: "1 day"
+    retention: "30 days"
+
+cache:
+  # Redis-like caching (using in-memory for now)
+  evaluation_cache_ttl: 3600  # 1 hour
+  discovery_cache_ttl: 86400  # 24 hours
+  max_cache_size: 10000
+
+security:
+  # API security settings
+  rate_limiting:
+    requests_per_minute: 100
+    burst_size: 20
+  
+  # Content validation
+  content_validation:
+    max_url_length: 2048
+    allowed_schemes: ["http", "https"]
+    blocked_domains: [] 

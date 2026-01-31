@@ -1,0 +1,842 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - {{ app_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.settings-section {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.settings-header {
+    background: linear-gradient(135deg, #0d6efd, #0056b3);
+    color: white;
+    padding: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.settings-header i {
+    margin-right: 0.75rem;
+    font-size: 1.25rem;
+}
+
+.settings-body {
+    padding: 2rem;
+}
+
+.setting-group {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.setting-group:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.setting-group h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.875rem;
+}
+
+.setting-item {
+    margin-bottom: 1.5rem;
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.setting-label {
+    font-weight: 500;
+    color: #212529;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.setting-description {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.75rem;
+}
+
+.form-control, .form-select {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    color: #495057;
+}
+
+.btn-settings {
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+}
+
+.btn-settings:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+}
+
+.settings-actions {
+    background: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-indicator.saved {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-indicator.modified {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-indicator.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.service-test {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.service-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.service-status.healthy {
+    background: #198754;
+}
+
+.service-status.unhealthy {
+    background: #dc3545;
+}
+
+.service-status.testing {
+    background: #ffc107;
+    animation: pulse 1s infinite;
+}
+
+.settings-tabs {
+    background: white;
+    border-radius: 0.5rem 0.5rem 0 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-radius: 0;
+    color: #6c757d;
+    font-weight: 500;
+    padding: 1rem 1.5rem;
+}
+
+.nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, #0d6efd, #0056b3);
+    color: white;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.tab-content {
+    background: white;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.reset-section {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-top: 1.5rem;
+}
+
+.reset-section h6 {
+    color: #856404;
+    margin-bottom: 0.5rem;
+}
+
+.reset-section p {
+    color: #856404;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        margin: 0 1rem;
+    }
+    
+    .settings-body {
+        padding: 1.5rem;
+    }
+    
+    .settings-actions {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .export-buttons {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-cog me-2"></i>System Settings
+                    </h1>
+                    <p class="text-muted mb-0">Configure analysis parameters, service endpoints, and preferences</p>
+                </div>
+                <div class="export-buttons">
+                    <button class="btn btn-outline-primary btn-settings" onclick="exportSettings()">
+                        <i class="fas fa-download me-1"></i>Export Settings
+                    </button>
+                    <button class="btn btn-outline-secondary btn-settings" onclick="resetToDefaults()">
+                        <i class="fas fa-undo me-1"></i>Reset to Defaults
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Tabs -->
+    <div class="settings-section">
+        <ul class="nav nav-tabs settings-tabs" id="settingsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="analysis-tab" data-bs-toggle="tab" data-bs-target="#analysis" type="button">
+                    <i class="fas fa-chart-line me-2"></i>Analysis
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button">
+                    <i class="fas fa-server me-2"></i>Services
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="application-tab" data-bs-toggle="tab" data-bs-target="#application" type="button">
+                    <i class="fas fa-desktop me-2"></i>Application
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced" type="button">
+                    <i class="fas fa-tools me-2"></i>Advanced
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="settingsTabContent">
+            <!-- Analysis Settings Tab -->
+            <div class="tab-pane fade show active" id="analysis" role="tabpanel">
+                <div class="settings-body">
+                    <form id="analysisSettingsForm">
+                        <div class="setting-group">
+                            <h6>Processing Parameters</h6>
+                            
+                            <div class="setting-item">
+                                <label class="setting-label" for="defaultDepth">Default Analysis Depth</label>
+                                <div class="setting-description">
+                                    Choose the default depth for document analysis
+                                </div>
+                                <select class="form-select" id="defaultDepth" name="default_depth">
+                                    <option value="quick" {{ 'selected' if current_settings.analysis.default_depth == 'quick' else '' }}>
+                                        Quick - Fast processing with basic analysis
+                                    </option>
+                                    <option value="comprehensive" {{ 'selected' if current_settings.analysis.default_depth == 'comprehensive' else '' }}>
+                                        Comprehensive - Balanced speed and detail (Recommended)
+                                    </option>
+                                    <option value="detailed" {{ 'selected' if current_settings.analysis.default_depth == 'detailed' else '' }}>
+                                        Detailed - Thorough analysis with maximum insights
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="batchSizeLimit">Batch Processing Limit</label>
+                                <div class="setting-description">
+                                    Maximum number of documents that can be processed simultaneously
+                                </div>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="batchSizeLimit" name="batch_size_limit" 
+                                           value="{{ current_settings.analysis.batch_size_limit }}" min="1" max="100">
+                                    <span class="input-group-text">documents</span>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="maxFileSize">Maximum File Size</label>
+                                <div class="setting-description">
+                                    Maximum size for uploaded documents (in MB)
+                                </div>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="maxFileSize" name="max_file_size" 
+                                           value="{{ (current_settings.analysis.max_file_size / 1024 / 1024)|round|int }}" 
+                                           min="1" max="500">
+                                    <span class="input-group-text">MB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="setting-group">
+                            <h6>File Types</h6>
+                            
+                            <div class="setting-item">
+                                <label class="setting-label">Allowed File Extensions</label>
+                                <div class="setting-description">
+                                    Currently supported file types for upload
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for ext in current_settings.analysis.allowed_extensions %}
+                                        <span class="badge bg-primary">{{ ext }}</span>
+                                    {% endfor %}
+                                </div>
+                                <small class="text-muted mt-2 d-block">
+                                    Contact administrator to modify supported file types
+                                </small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="settings-actions">
+                    <div class="status-indicator saved" id="analysisStatus">
+                        <i class="fas fa-check-circle me-1"></i>Settings saved
+                    </div>
+                    <button type="button" class="btn btn-primary btn-settings" onclick="saveAnalysisSettings()">
+                        <i class="fas fa-save me-1"></i>Save Analysis Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Services Settings Tab -->
+            <div class="tab-pane fade" id="services" role="tabpanel">
+                <div class="settings-body">
+                    <form id="servicesSettingsForm">
+                        <div class="setting-group">
+                            <h6>Service Endpoints</h6>
+                            
+                            <div class="setting-item">
+                                <label class="setting-label" for="documentParserUrl">Document Parser Service</label>
+                                <div class="setting-description">
+                                    Endpoint for document parsing and content extraction
+                                </div>
+                                <div class="input-group">
+                                    <input type="url" class="form-control" id="documentParserUrl" name="document_parser_url" 
+                                           value="{{ current_settings.services.document_parser }}" 
+                                           placeholder="http://localhost:8000">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="testService('document_parser')">
+                                        <span class="service-test">
+                                            <span class="service-status" id="documentParserStatus"></span>
+                                            Test
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="topicManagerUrl">Topic Manager Service</label>
+                                <div class="setting-description">
+                                    Endpoint for topic categorization and management
+                                </div>
+                                <div class="input-group">
+                                    <input type="url" class="form-control" id="topicManagerUrl" name="topic_manager_url" 
+                                           value="{{ current_settings.services.topic_manager }}" 
+                                           placeholder="http://localhost:8101">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="testService('topic_manager')">
+                                        <span class="service-test">
+                                            <span class="service-status" id="topicManagerStatus"></span>
+                                            Test
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="qualityControllerUrl">Quality Controller Service</label>
+                                <div class="setting-description">
+                                    Endpoint for quality assessment and fact-checking
+                                </div>
+                                <div class="input-group">
+                                    <input type="url" class="form-control" id="qualityControllerUrl" name="quality_controller_url" 
+                                           value="{{ current_settings.services.quality_controller }}" 
+                                           placeholder="http://localhost:8102">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="testService('quality_controller')">
+                                        <span class="service-test">
+                                            <span class="service-status" id="qualityControllerStatus"></span>
+                                            Test
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="diffWorkerUrl">Diff Worker Service</label>
+                                <div class="setting-description">
+                                    Endpoint for gap analysis and report comparison
+                                </div>
+                                <div class="input-group">
+                                    <input type="url" class="form-control" id="diffWorkerUrl" name="diff_worker_url" 
+                                           value="{{ current_settings.services.diff_worker }}" 
+                                           placeholder="http://localhost:8103">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="testService('diff_worker')">
+                                        <span class="service-test">
+                                            <span class="service-status" id="diffWorkerStatus"></span>
+                                            Test
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="setting-group">
+                            <h6>Service Health</h6>
+                            
+                            <div class="setting-item">
+                                <button type="button" class="btn btn-outline-info btn-settings" onclick="testAllServices()">
+                                    <i class="fas fa-heartbeat me-1"></i>Test All Services
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-settings ms-2" onclick="window.open('/health/detailed', '_blank')">
+                                    <i class="fas fa-external-link-alt me-1"></i>View Health Monitor
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="settings-actions">
+                    <div class="status-indicator saved" id="servicesStatus">
+                        <i class="fas fa-check-circle me-1"></i>Settings saved
+                    </div>
+                    <button type="button" class="btn btn-primary btn-settings" onclick="saveServicesSettings()">
+                        <i class="fas fa-save me-1"></i>Save Service Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Application Settings Tab -->
+            <div class="tab-pane fade" id="application" role="tabpanel">
+                <div class="settings-body">
+                    <div class="setting-group">
+                        <h6>Application Information</h6>
+                        
+                        <div class="setting-item">
+                            <label class="setting-label">Application Name</label>
+                            <div class="setting-description">
+                                Display name for the application
+                            </div>
+                            <input type="text" class="form-control" value="{{ current_settings.application.app_name }}" readonly>
+                            <small class="text-muted">Read-only: Modify via environment variables</small>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="setting-label">Debug Mode</label>
+                            <div class="setting-description">
+                                Current debug status
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" disabled 
+                                       {{ 'checked' if current_settings.application.debug else '' }}>
+                                <label class="form-check-label">
+                                    {{ 'Enabled' if current_settings.application.debug else 'Disabled' }}
+                                </label>
+                            </div>
+                            <small class="text-muted">Read-only: Modify via environment variables</small>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="setting-label">Upload Directory</label>
+                            <div class="setting-description">
+                                Directory for temporary file uploads
+                            </div>
+                            <input type="text" class="form-control" value="{{ current_settings.application.upload_dir }}" readonly>
+                            <small class="text-muted">Read-only: Modify via environment variables</small>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <h6>System Information</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="setting-item">
+                                    <label class="setting-label">Frontend Version</label>
+                                    <div class="badge bg-info">v1.0.0</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="setting-item">
+                                    <label class="setting-label">Last Updated</label>
+                                    <div class="text-muted">{{ current_time.strftime('%Y-%m-%d %H:%M UTC') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <div class="status-indicator saved">
+                        <i class="fas fa-info-circle me-1"></i>Read-only settings
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-settings" onclick="window.open('/health/detailed', '_blank')">
+                        <i class="fas fa-chart-line me-1"></i>View System Status
+                    </button>
+                </div>
+            </div>
+
+            <!-- Advanced Settings Tab -->
+            <div class="tab-pane fade" id="advanced" role="tabpanel">
+                <div class="settings-body">
+                    <div class="setting-group">
+                        <h6>Data Management</h6>
+                        
+                        <div class="setting-item">
+                            <label class="setting-label">Export Settings</label>
+                            <div class="setting-description">
+                                Download current configuration as JSON file
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-settings" onclick="exportSettings()">
+                                <i class="fas fa-download me-1"></i>Export Configuration
+                            </button>
+                        </div>
+
+                        <div class="setting-item">
+                            <label class="setting-label">Clear Processing Cache</label>
+                            <div class="setting-description">
+                                Clear temporary processing data and task history
+                            </div>
+                            <button type="button" class="btn btn-outline-warning btn-settings" onclick="clearCache()">
+                                <i class="fas fa-trash me-1"></i>Clear Cache
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="reset-section">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Reset Settings</h6>
+                        <p>This will reset all configurable settings to their default values. This action cannot be undone.</p>
+                        <button type="button" class="btn btn-warning btn-settings" onclick="resetToDefaults()">
+                            <i class="fas fa-undo me-1"></i>Reset to Defaults
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <div class="status-indicator">
+                        <i class="fas fa-tools me-1"></i>Advanced operations
+                    </div>
+                    <div class="export-buttons">
+                        <button type="button" class="btn btn-outline-secondary btn-settings" onclick="window.open('/', '_blank')">
+                            <i class="fas fa-home me-1"></i>Back to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Settings management functions
+
+function saveAnalysisSettings() {
+    const form = document.getElementById('analysisSettingsForm');
+    const formData = new FormData(form);
+    
+    // Convert MB to bytes for max_file_size
+    const maxFileSizeMB = formData.get('max_file_size');
+    formData.set('max_file_size', maxFileSizeMB * 1024 * 1024);
+    
+    updateStatus('analysisStatus', 'saving');
+    
+    fetch('/settings/analysis', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateStatus('analysisStatus', 'saved');
+            showToast(data.message, 'success');
+        } else {
+            updateStatus('analysisStatus', 'error');
+            showToast(data.message || 'Failed to save settings', 'error');
+        }
+    })
+    .catch(error => {
+        updateStatus('analysisStatus', 'error');
+        showToast('Network error: ' + error.message, 'error');
+    });
+}
+
+function saveServicesSettings() {
+    const form = document.getElementById('servicesSettingsForm');
+    const formData = new FormData(form);
+    
+    updateStatus('servicesStatus', 'saving');
+    
+    fetch('/settings/services', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateStatus('servicesStatus', 'saved');
+            showToast(data.message, 'success');
+        } else {
+            updateStatus('servicesStatus', 'error');
+            showToast(data.message || 'Failed to save settings', 'error');
+        }
+    })
+    .catch(error => {
+        updateStatus('servicesStatus', 'error');
+        showToast('Network error: ' + error.message, 'error');
+    });
+}
+
+function testService(serviceName) {
+    const statusElement = document.getElementById(serviceName + 'Status');
+    statusElement.className = 'service-status testing';
+    
+    fetch(`/health`, {
+        method: 'GET'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const serviceStatus = data.services[serviceName];
+        if (serviceStatus === 'healthy') {
+            statusElement.className = 'service-status healthy';
+            showToast(`${serviceName} is healthy`, 'success');
+        } else {
+            statusElement.className = 'service-status unhealthy';
+            showToast(`${serviceName} is unhealthy`, 'error');
+        }
+    })
+    .catch(error => {
+        statusElement.className = 'service-status unhealthy';
+        showToast(`Failed to test ${serviceName}: ${error.message}`, 'error');
+    });
+}
+
+function testAllServices() {
+    const services = ['document_parser', 'topic_manager', 'quality_controller', 'diff_worker'];
+    
+    showToast('Testing all services...', 'info');
+    
+    services.forEach(service => {
+        setTimeout(() => testService(service), Math.random() * 1000);
+    });
+}
+
+function exportSettings() {
+    showToast('Exporting settings...', 'info');
+    
+    fetch('/settings/export/json')
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        }
+        throw new Error('Export failed');
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `twin-report-kb-settings-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        showToast('Settings exported successfully!', 'success');
+    })
+    .catch(error => {
+        showToast('Failed to export settings: ' + error.message, 'error');
+    });
+}
+
+function clearCache() {
+    if (confirm('Are you sure you want to clear the processing cache? This will remove all temporary data and task history.')) {
+        showToast('Clearing cache...', 'info');
+        
+        // Simulate cache clearing (in production, this would be an API call)
+        setTimeout(() => {
+            showToast('Cache cleared successfully!', 'success');
+        }, 1000);
+    }
+}
+
+function resetToDefaults() {
+    if (confirm('Are you sure you want to reset all settings to defaults? This action cannot be undone.')) {
+        showToast('Resetting to defaults...', 'info');
+        
+        // Reset form values to defaults
+        document.getElementById('defaultDepth').value = 'comprehensive';
+        document.getElementById('batchSizeLimit').value = '50';
+        document.getElementById('maxFileSize').value = '100';
+        
+        document.getElementById('documentParserUrl').value = 'http://localhost:8000';
+        document.getElementById('topicManagerUrl').value = 'http://localhost:8101';
+        document.getElementById('qualityControllerUrl').value = 'http://localhost:8102';
+        document.getElementById('diffWorkerUrl').value = 'http://localhost:8103';
+        
+        showToast('Settings reset to defaults. Remember to save your changes.', 'success');
+        
+        // Update status indicators
+        updateStatus('analysisStatus', 'modified');
+        updateStatus('servicesStatus', 'modified');
+    }
+}
+
+function updateStatus(elementId, status) {
+    const element = document.getElementById(elementId);
+    
+    switch (status) {
+        case 'saving':
+            element.className = 'status-indicator modified';
+            element.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+            break;
+        case 'saved':
+            element.className = 'status-indicator saved';
+            element.innerHTML = '<i class="fas fa-check-circle me-1"></i>Settings saved';
+            break;
+        case 'modified':
+            element.className = 'status-indicator modified';
+            element.innerHTML = '<i class="fas fa-edit me-1"></i>Modified (unsaved)';
+            break;
+        case 'error':
+            element.className = 'status-indicator error';
+            element.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Save failed';
+            break;
+    }
+}
+
+// Form change detection
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = ['analysisSettingsForm', 'servicesSettingsForm'];
+    
+    forms.forEach(formId => {
+        const form = document.getElementById(formId);
+        if (form) {
+            const inputs = form.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const statusId = formId.replace('SettingsForm', 'Status');
+                    updateStatus(statusId, 'modified');
+                });
+            });
+        }
+    });
+    
+    // Test all services on page load
+    setTimeout(testAllServices, 1000);
+});
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('liveToast');
+    const toastBody = toast.querySelector('.toast-body');
+    const toastIcon = toast.querySelector('.toast-header i');
+    
+    // Update content
+    toastBody.textContent = message;
+    
+    // Update icon based on type
+    toastIcon.className = `fas ${type === 'success' ? 'fa-check-circle text-success' : 
+                                type === 'error' ? 'fa-exclamation-circle text-danger' : 
+                                'fa-info-circle text-primary'} me-2`;
+    
+    // Show toast
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + S to save current tab
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        
+        const activeTab = document.querySelector('.nav-tabs .nav-link.active');
+        if (activeTab) {
+            const tabId = activeTab.getAttribute('data-bs-target');
+            if (tabId === '#analysis') {
+                saveAnalysisSettings();
+            } else if (tabId === '#services') {
+                saveServicesSettings();
+            }
+        }
+    }
+});
+</script>
+{% endblock %} 

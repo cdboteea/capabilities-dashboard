@@ -1,0 +1,58 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+asyncpg==0.29.0
+pydantic==2.5.0
+httpx==0.25.2
+python-multipart==0.0.6
+
+# Document parsing libraries
+PyPDF2==3.0.1
+pdfplumber==0.10.0
+python-docx==1.1.0
+openpyxl==3.1.2
+python-pptx==0.6.23
+
+# Google APIs
+google-api-python-client==2.108.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.1.0
+
+# Web scraping and content extraction
+requests==2.31.0
+beautifulsoup4==4.12.2
+html2text==2024.2.26
+
+# Text processing
+nltk==3.8.1
+spacy==3.7.2
+textstat==0.7.3
+
+# File handling
+python-magic==0.4.27
+chardet==5.2.0
+aiofiles==23.2.1
+
+# Chat export processing
+pandas==2.1.4
+xmltodict==0.13.0
+
+# Database and storage
+sqlalchemy==2.0.23
+alembic==1.13.0
+
+# Background tasks
+celery==5.3.4
+redis==5.0.1
+
+# Utilities
+python-dotenv==1.0.0
+structlog==23.2.0
+tenacity==8.2.3
+pyyaml==6.0.1
+python-dateutil==2.8.2
+
+# Monitoring
+prometheus-client==0.19.0
+
+# New newspaper3k and readability-lxml replacement
+trafilatura==1.6.4 

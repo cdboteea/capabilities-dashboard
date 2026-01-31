@@ -1,0 +1,2 @@
+# Sentiment Analyzer default configuration
+db_url: postgresql+asyncpg://ai_user:ai_pass@postgres/ai_platform

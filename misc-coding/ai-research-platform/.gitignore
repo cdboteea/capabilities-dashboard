@@ -1,0 +1,165 @@
+# AI Research Platform .gitignore
+
+# Environment and secrets
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Credentials and API keys
+**/credentials/
+**/gmail_service_account.json
+**/api_keys.json
+**/*_credentials.json
+**/drive_service_account.json
+*service_account*.json
+
+# Gmail OAuth Credentials (CRITICAL - Never commit these!)
+Gmail config/
+**/Gmail config/
+**/*client_secret*.json
+**/*oauth2_credentials*.json
+**/*gmail_token*.json
+**/*gmail_oauth*.json
+**/*gmail_client_secret*.json
+**/gmail_credentials/
+**/gmail_credentials/**
+gmail_client_secret.json
+setup_gmail_auth.py
+credentials.json
+token.json
+client_secret_*.json
+
+# Database data (should use Docker volumes)
+data/postgres/
+data/chroma/
+data/minio/
+
+# Docker volumes and build context
+docker-volumes/
+.docker/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Node.js (for any future frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+*.log
+logs/
+*.out
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Archives and backups
+*.zip
+*.tar.gz
+*.rar
+*.7z
+backup/
+backups/
+
+# Mac Studio specific
+# (These might contain sensitive endpoint info)
+mac_studio_config.local
+local_models/
+model_cache/
+
+# Email processing temp files
+email_temp/
+attachment_temp/
+downloaded_content/
+
+# Web scraping temp
+scraped_content/
+archive_temp/
+
+# Development and testing
+test_data/
+sample_emails/
+mock_data/
+
+# IDE and editor files
+*.sublime-project
+*.sublime-workspace
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Documentation builds
+docs/_build/
+docs/build/
+
+# Deployment
+docker-compose.override.yml
+
+# Local development overrides
+**/config/*.local.yml
+**/config/*.dev.yml sub-projects/real-time-intel/models/

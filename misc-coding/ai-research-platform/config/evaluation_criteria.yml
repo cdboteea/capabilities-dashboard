@@ -1,0 +1,447 @@
+# AI Research Platform - Evaluation Criteria Configuration
+# Version: 1.0
+# Last Updated: 2025-01-22
+# 
+# This file contains all assessment metrics, thresholds, and weights used across
+# the platform. Changes to this file should be validated and deployed carefully.
+
+# Twin-Report KB Metrics
+twin_report_kb:
+  diff_analysis:
+    # Component weights for overall quality score
+    weights:
+      completeness: 0.30
+      accuracy: 0.25
+      usefulness: 0.25
+      coherence: 0.20
+    
+    # Quality level thresholds
+    thresholds:
+      excellent: 0.90
+      very_good: 0.80
+      good: 0.70
+      satisfactory: 0.60
+      needs_improvement: 0.50
+      poor: 0.00
+    
+    # Completeness scoring criteria
+    completeness:
+      required_components_weight: 0.40
+      summary_quality_weight: 0.30
+      gap_analysis_depth_weight: 0.30
+      summary_thresholds:
+        basic_length: 50      # characters
+        detailed_length: 150  # characters
+      gap_thresholds:
+        multiple_gaps: 2      # count
+    
+    # Accuracy scoring criteria
+    accuracy:
+      confidence_weight: 0.60
+      ai_validation_weight: 0.40
+      ai_validation_model: "deepseek-r1"
+      ai_validation_temperature: 0.1
+    
+    # Usefulness scoring criteria
+    usefulness:
+      actionable_gaps_weight: 0.30
+      quality_overlaps_weight: 0.20
+      detailed_contradictions_weight: 0.20
+      summary_insights_weight: 0.30
+      thresholds:
+        actionable_gap_min_length: 20    # characters
+        detailed_contradiction_min_length: 50  # characters
+      insight_keywords:
+        - "identified"
+        - "analysis"
+        - "shows"
+        - "reveals"
+        - "indicates"
+    
+    # Coherence scoring criteria
+    coherence:
+      summary_findings_alignment_weight: 0.70
+      confidence_findings_correlation_weight: 0.20
+      metadata_consistency_weight: 0.10
+      thresholds:
+        high_confidence: 0.80
+        low_confidence: 0.40
+        substantial_findings: 2
+
+  gap_analysis:
+    # Priority scoring for gaps
+    priority_scores:
+      high: 0.90
+      medium: 0.60
+      low: 0.30
+    
+    # Future context modifiers
+    context_modifiers:
+      topic_importance: 0.10
+      research_urgency: 0.10
+      resource_availability: 0.05
+
+  article_quality:
+    # Component weights for overall article quality
+    weights:
+      content: 0.30
+      structure: 0.20
+      citations: 0.25
+      depth: 0.25
+    
+    # Content quality criteria
+    content:
+      length_weight: 0.30
+      sentence_variety_weight: 0.20
+      examples_weight: 0.20
+      technical_depth_weight: 0.30
+      word_count_optimal: [1000, 10000]
+      word_count_substantial: 500
+      sentence_length_optimal: [10, 25]
+      example_keywords:
+        - "example"
+        - "instance"
+        - "case"
+        - "specifically"
+        - "such as"
+      technical_keywords:
+        - "analysis"
+        - "research"
+        - "study"
+        - "data"
+        - "evidence"
+    
+    # Structure quality criteria
+    structure:
+      header_weight: 0.40
+      paragraph_weight: 0.30
+      logical_flow_weight: 0.30
+      thresholds:
+        good_headers: 3
+        basic_headers: 1
+        good_paragraphs: 5
+        basic_paragraphs: 3
+      transition_words:
+        - "however"
+        - "therefore"
+        - "furthermore"
+        - "moreover"
+        - "consequently"
+    
+    # Citation quality criteria
+    citations:
+      count_weight: 0.40
+      diversity_weight: 0.30
+      integration_weight: 0.30
+      thresholds:
+        excellent_citations: 10
+        good_citations: 5
+        minimum_citations: 2
+    
+    # Depth quality criteria
+    depth:
+      analytical_language_weight: 0.30
+      evidence_usage_weight: 0.30
+      critical_thinking_weight: 0.20
+      explanations_weight: 0.20
+      analytical_keywords:
+        - "analyze"
+        - "examine"
+        - "investigate"
+        - "explore"
+        - "evaluate"
+        - "assess"
+      evidence_keywords:
+        - "evidence"
+        - "data"
+        - "research"
+        - "findings"
+        - "results"
+        - "shows"
+      critical_thinking_keywords:
+        - "however"
+        - "although"
+        - "despite"
+        - "nevertheless"
+        - "on the other hand"
+      explanation_keywords:
+        - "because"
+        - "since"
+        - "due to"
+        - "as a result"
+        - "therefore"
+
+# Idea Database Metrics
+idea_database:
+  categorization:
+    # Confidence thresholds
+    confidence_thresholds:
+      high: 0.70
+      medium: 0.40
+      low: 0.00
+      manual_review_required: 0.70
+    
+    # Category keywords for scoring
+    category_keywords:
+      business_ideas:
+        - "startup"
+        - "business"
+        - "entrepreneur"
+        - "market"
+        - "revenue"
+        - "product"
+        - "service"
+        - "funding"
+        - "investment"
+        - "venture"
+      dev_tools:
+        - "github"
+        - "python"
+        - "javascript"
+        - "framework"
+        - "library"
+        - "api"
+        - "development"
+        - "coding"
+        - "programming"
+        - "software"
+      research_papers:
+        - "paper"
+        - "study"
+        - "research"
+        - "analysis"
+        - "findings"
+        - "methodology"
+        - "academic"
+        - "journal"
+        - "publication"
+        - "doi"
+      ai_implementations:
+        - "ai"
+        - "machine learning"
+        - "neural"
+        - "model"
+        - "algorithm"
+        - "automation"
+        - "deep learning"
+        - "nlp"
+        - "computer vision"
+        - "llm"
+      industry_news:
+        - "news"
+        - "announcement"
+        - "company"
+        - "industry"
+        - "market"
+        - "update"
+        - "trend"
+        - "acquisition"
+        - "merger"
+        - "ipo"
+      reference_materials:
+        - "tutorial"
+        - "guide"
+        - "documentation"
+        - "how-to"
+        - "reference"
+        - "manual"
+        - "examples"
+        - "best practices"
+        - "tips"
+        - "tricks"
+    
+    # Scoring parameters
+    scoring:
+      subject_line_bonus: 2     # multiplier for keywords in subject
+      confidence_normalization: 10  # divide score by this for 0-1 range
+
+  entity_extraction:
+    # Confidence scoring for different match types
+    confidence_scoring:
+      exact_match: [0.95, 1.00]
+      fuzzy_match: [0.70, 0.94]
+      context_based: [0.50, 0.69]
+      uncertain: [0.00, 0.49]
+    
+    # Entity validation methods
+    validation_methods:
+      technology: "cross_reference_tech_databases"
+      person: "validate_public_profiles"
+      company: "check_business_registries"
+      paper: "verify_doi_publication_databases"
+      repository: "validate_github_gitlab_existence"
+      concept: "context_based_confidence_only"
+
+  priority_scoring:
+    # Component weights for priority calculation
+    weights:
+      category_relevance: 0.40
+      content_quality: 0.30
+      timeliness: 0.20
+      source_credibility: 0.10
+
+# Real-Time Intel Metrics
+real_time_intel:
+  source_evaluation:
+    # Evaluation score thresholds
+    thresholds:
+      accuracy_retirement: 0.60    # Sources below this flagged for retirement
+      relevance_deprioritize: 0.50  # Sources below this deprioritized
+      timeliness_delayed: 0.40     # Sources below this marked as delayed
+    
+    # Source quality schema
+    evaluation_criteria:
+      accuracy_score:
+        method: "llm_fact_checking"
+        factors:
+          - "cross_reference_verified_databases"
+          - "historical_accuracy_tracking"
+          - "correction_frequency_analysis"
+      relevance_score:
+        method: "content_alignment_analysis"
+        factors:
+          - "topic_coverage_percentage"
+          - "keyword_density_analysis"
+          - "user_engagement_metrics"
+      timeliness_score:
+        method: "breaking_news_speed_comparison"
+        factors:
+          - "time_to_publish_vs_competitors"
+          - "update_frequency_consistency"
+          - "market_hours_coverage"
+
+  content_processing:
+    # Alert quality metrics
+    alert_quality:
+      false_positive_rate_threshold: 0.10  # 10% maximum
+      response_time_target: 300  # seconds
+    
+    # Performance targets
+    performance_targets:
+      source_availability: 0.95
+      content_processing_speed: 100  # events per minute
+      sentiment_analysis_confidence: 0.80
+
+# AI Browser Agent Metrics
+ai_browser_agent:
+  response_quality:
+    # Overall quality threshold
+    quality_threshold: 0.70  # Below this triggers error recovery
+    
+    # Component scoring
+    components:
+      completeness:
+        full_response: 1.0
+        partial_response: 0.6
+        incomplete: 0.2
+      relevance:
+        highly_relevant: 1.0
+        somewhat_relevant: 0.6
+        irrelevant: 0.0
+      coherence:
+        coherent: 1.0
+        partially_coherent: 0.6
+        incoherent: 0.0
+
+  automation_accuracy:
+    # Success rate targets
+    targets:
+      session_success_rate: 0.85
+      provider_reliability: 0.95
+      error_recovery_rate: 0.80
+
+# Cross-Platform Metrics
+cross_platform:
+  llm_performance:
+    # Universal performance standards
+    standards:
+      citation_accuracy: 0.95
+      response_latency: 3.0  # seconds
+      error_rate: 0.05
+    
+    # Model-specific thresholds
+    model_thresholds:
+      deepseek_r1:
+        reasoning_accuracy: 0.90
+        response_time: 5.0  # seconds
+        confidence_threshold: 0.80
+      qwen_3_72b:
+        multilingual_accuracy: 0.85
+        response_time: 3.0  # seconds
+        confidence_threshold: 0.75
+      llama_4_scout:
+        domain_expertise: 0.95
+        response_time: 4.0  # seconds
+        confidence_threshold: 0.85
+
+  system_health:
+    # Infrastructure performance targets
+    database_performance:
+      query_response_time: 0.1  # seconds
+      connection_pool_utilization: 0.80
+      transaction_success_rate: 0.99
+    
+    vector_database:
+      search_latency: 0.2  # seconds
+      similarity_accuracy: 0.90
+      index_freshness: 3600  # seconds (1 hour)
+    
+    storage_systems:
+      minio_availability: 0.999
+      chroma_response_time: 0.5  # seconds
+      postgres_uptime: 0.995
+
+# Configuration Management
+configuration:
+  # Versioning
+  version: "1.0"
+  last_updated: "2025-01-22"
+  next_review_date: "2025-02-22"
+  
+  # Change management
+  change_management:
+    require_validation: true
+    require_backup: true
+    rollback_threshold: 0.95  # success rate below this triggers rollback
+    monitoring_period: 7  # days to monitor after changes
+  
+  # Environment overrides
+  environments:
+    development:
+      # Lower thresholds for development environment
+      twin_report_kb:
+        diff_analysis:
+          thresholds:
+            excellent: 0.80
+            good: 0.60
+            needs_improvement: 0.40
+    
+    staging:
+      # Staging uses production values for realistic testing
+      # No overrides
+    
+    production:
+      # Production uses base configuration
+      # No overrides
+
+# Validation and Testing
+validation:
+  # Automated testing schedule
+  testing_schedule:
+    daily: "quality_regression_test"
+    weekly: "sample_validation_50_items"
+    monthly: "comprehensive_review_200_items"
+    quarterly: "full_metric_audit_external_review"
+  
+  # Validation criteria
+  validation_criteria:
+    inter_rater_reliability: 0.80
+    metric_human_correlation: 0.75
+    false_positive_rate: 0.15
+    false_negative_rate: 0.10
+  
+  # Metric drift detection
+  drift_detection:
+    window_days: 30
+    alert_threshold: 0.05
+    baseline_period: "30d" 

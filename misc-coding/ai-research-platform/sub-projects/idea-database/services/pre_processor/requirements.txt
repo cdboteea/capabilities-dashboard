@@ -1,0 +1,6 @@
+fastapi==0.111.*
+uvicorn[standard]==0.29.*
+markdownify==0.11.*
+pyyaml==6.*
+langdetect==1.0.*
+redis==5.* 

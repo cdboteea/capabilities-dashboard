@@ -1,0 +1,617 @@
+{% extends "base.html" %}
+
+{% block title %}Results - {{ task_id }} - {{ app_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/components.css') }}">
+<style>
+.results-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.result-section {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.result-section-header {
+    background: linear-gradient(135deg, #0d6efd, #0056b3);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.result-section-header i {
+    margin-right: 0.5rem;
+}
+
+.result-section-body {
+    padding: 1.5rem;
+}
+
+.score-card {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid #dee2e6;
+}
+
+.score-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.score-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.content-preview {
+    max-height: 300px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border: 1px solid #dee2e6;
+}
+
+.metadata-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.metadata-item {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
+
+.metadata-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.metadata-value {
+    font-weight: 500;
+    color: #212529;
+}
+
+.category-tag {
+    display: inline-block;
+    background: #e7f3ff;
+    color: #0066cc;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin: 0.125rem;
+    border: 1px solid #b3d9ff;
+}
+
+.gap-item {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.gap-priority {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.gap-priority.high {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.gap-priority.medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.gap-priority.low {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.processing-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -1.5rem;
+    top: 0.5rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: #198754;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px #198754;
+}
+
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: -1.125rem;
+    top: 1.25rem;
+    width: 2px;
+    height: calc(100% - 0.75rem);
+    background: #dee2e6;
+}
+
+.timeline-item:last-child::after {
+    display: none;
+}
+
+.error-display {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.loading-placeholder {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+}
+
+.back-button {
+    margin-bottom: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <!-- Back Button -->
+    <div class="back-button">
+        <a href="/" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">
+                        <i class="fas fa-chart-line me-2"></i>Analysis Results
+                    </h1>
+                    <p class="text-muted mb-0">Task ID: <code>{{ task_id }}</code></p>
+                </div>
+                <div class="text-end">
+                    {% if task.status == 'completed' %}
+                        <span class="status-badge completed">
+                            <i class="fas fa-check-circle me-1"></i>Completed
+                        </span>
+                    {% elif task.status == 'failed' %}
+                        <span class="status-badge failed">
+                            <i class="fas fa-times-circle me-1"></i>Failed
+                        </span>
+                    {% else %}
+                        <span class="status-badge processing">
+                            <i class="fas fa-spinner fa-spin me-1"></i>{{ task.status|title }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if task.status == 'failed' %}
+        <!-- Error Display -->
+        <div class="error-display">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>Processing Failed</h5>
+            <p class="mb-0">{{ task.error or "An unknown error occurred during processing." }}</p>
+            {% if task.failed_at %}
+                <small class="text-muted d-block mt-2">
+                    Failed at: {{ task.failed_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+                </small>
+            {% endif %}
+        </div>
+    {% elif task.status != 'completed' %}
+        <!-- Processing Status -->
+        <div class="result-section">
+            <div class="result-section-header">
+                <span><i class="fas fa-cogs"></i>Processing Status</span>
+                <span>{{ task.progress }}%</span>
+            </div>
+            <div class="result-section-body">
+                <div class="mb-3">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             style="width: {{ task.progress }}%">
+                            {{ task.progress }}%
+                        </div>
+                    </div>
+                </div>
+                <p class="mb-0">
+                    <strong>Current Step:</strong> {{ task.current_step|title }}
+                </p>
+                {% if task.created_at %}
+                    <small class="text-muted">
+                        Started: {{ task.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+                    </small>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="loading-placeholder">
+            <i class="fas fa-spinner fa-spin fa-3x mb-3"></i>
+            <p>Processing in progress... This page will automatically refresh.</p>
+        </div>
+    {% else %}
+        <!-- Completed Results -->
+        {% set result = task.result %}
+        
+        <!-- Processing Summary -->
+        <div class="result-section">
+            <div class="result-section-header">
+                <span><i class="fas fa-info-circle"></i>Processing Summary</span>
+                <div class="export-buttons">
+                    <button class="btn btn-sm btn-outline-light" onclick="exportResults('json')">
+                        <i class="fas fa-download me-1"></i>JSON
+                    </button>
+                    <button class="btn btn-sm btn-outline-light" onclick="exportResults('pdf')">
+                        <i class="fas fa-file-pdf me-1"></i>PDF
+                    </button>
+                </div>
+            </div>
+            <div class="result-section-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="processing-timeline">
+                            <div class="timeline-item">
+                                <strong>Document Parsing</strong>
+                                <div class="text-muted">Content extracted and normalized</div>
+                            </div>
+                            <div class="timeline-item">
+                                <strong>Topic Categorization</strong>
+                                <div class="text-muted">Content classified and tagged</div>
+                            </div>
+                            <div class="timeline-item">
+                                <strong>Quality Assessment</strong>
+                                <div class="text-muted">Credibility and accuracy evaluated</div>
+                            </div>
+                            <div class="timeline-item">
+                                <strong>Gap Analysis</strong>
+                                <div class="text-muted">Knowledge gaps identified</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metadata-grid">
+                            <div class="metadata-item">
+                                <div class="metadata-label">Document ID</div>
+                                <div class="metadata-value">{{ result.document_id or 'N/A' }}</div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-label">Processing Time</div>
+                                <div class="metadata-value">
+                                    {% if task.completed_at and task.created_at %}
+                                        {{ "%.1f"|format((task.completed_at - task.created_at).total_seconds()) }}s
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-label">Completed At</div>
+                                <div class="metadata-value">
+                                    {{ task.completed_at.strftime('%Y-%m-%d %H:%M:%S UTC') if task.completed_at else 'N/A' }}
+                                </div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-label">File Size</div>
+                                <div class="metadata-value">
+                                    {% if result.content %}
+                                        {{ "%.1f"|format(result.content|length / 1024) }} KB
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Content Preview -->
+        {% if result.content %}
+        <div class="result-section">
+            <div class="result-section-header">
+                <span><i class="fas fa-file-text"></i>Content Preview</span>
+                <span class="badge bg-light text-dark">{{ result.content|length }} characters</span>
+            </div>
+            <div class="result-section-body">
+                <div class="content-preview">{{ result.content[:2000] }}{% if result.content|length > 2000 %}...{% endif %}</div>
+                {% if result.content|length > 2000 %}
+                    <small class="text-muted mt-2 d-block">
+                        Showing first 2,000 characters. Full content available in export.
+                    </small>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Topic Categorization -->
+        {% if result.categories or result.get('topic_analysis') %}
+        <div class="result-section">
+            <div class="result-section-header">
+                <span><i class="fas fa-tags"></i>Topic Categorization</span>
+            </div>
+            <div class="result-section-body">
+                {% if result.categories %}
+                    <h6>Categories</h6>
+                    <div class="mb-3">
+                        {% for category in result.categories %}
+                            <span class="category-tag">{{ category }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                {% if result.get('topic_analysis') %}
+                    {% set topics = result.topic_analysis %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Primary Topics</h6>
+                            <ul class="list-unstyled">
+                                {% for topic in topics.get('topics', [])[:5] %}
+                                    <li class="mb-1">
+                                        <i class="fas fa-chevron-right text-primary me-2"></i>{{ topic }}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Keywords</h6>
+                            <div>
+                                {% for keyword in topics.get('keywords', [])[:10] %}
+                                    <span class="badge bg-secondary me-1 mb-1">{{ keyword }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quality Assessment -->
+        {% if result.get('quality_assessment') %}
+        <div class="result-section">
+            <div class="result-section-header">
+                <span><i class="fas fa-star"></i>Quality Assessment</span>
+            </div>
+            <div class="result-section-body">
+                {% set quality = result.quality_assessment %}
+                <div class="row mb-4">
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <div class="score-card">
+                            <div class="score-value text-primary">{{ quality.get('overall_score', 0)|round(1) }}</div>
+                            <div class="score-label">Overall</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <div class="score-card">
+                            <div class="score-value text-success">{{ quality.get('completeness', 0)|round(1) }}</div>
+                            <div class="score-label">Completeness</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <div class="score-card">
+                            <div class="score-value text-info">{{ quality.get('accuracy', 0)|round(1) }}</div>
+                            <div class="score-label">Accuracy</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <div class="score-card">
+                            <div class="score-value text-warning">{{ quality.get('usefulness', 0)|round(1) }}</div>
+                            <div class="score-label">Usefulness</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <div class="score-card">
+                            <div class="score-value text-secondary">{{ quality.get('coherence', 0)|round(1) }}</div>
+                            <div class="score-label">Coherence</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if quality.get('suggestions') %}
+                    <h6>Improvement Suggestions</h6>
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for suggestion in quality.suggestions %}
+                            <li class="list-group-item border-0 px-0">
+                                <i class="fas fa-lightbulb text-warning me-2"></i>{{ suggestion }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% if quality.get('flagged_issues') %}
+                    <h6>Flagged Issues</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for issue in quality.flagged_issues %}
+                            <li class="list-group-item border-0 px-0 text-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>{{ issue }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Gap Analysis -->
+        {% if result.get('gap_analysis') %}
+        <div class="result-section">
+            <div class="result-section-header">
+                <span><i class="fas fa-search"></i>Gap Analysis</span>
+                <span class="badge bg-light text-dark">
+                    {{ result.gap_analysis.get('gaps_found', [])|length }} gaps found
+                </span>
+            </div>
+            <div class="result-section-body">
+                {% set gaps = result.gap_analysis %}
+                
+                {% if gaps.get('priority_score') %}
+                    <div class="alert alert-info mb-4">
+                        <strong>Priority Score:</strong> {{ gaps.priority_score|round(1) }}/100
+                        <div class="progress mt-2" style="height: 0.5rem;">
+                            <div class="progress-bar" style="width: {{ gaps.priority_score }}%"></div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if gaps.get('gaps_found') %}
+                    <h6>Identified Gaps</h6>
+                    {% for gap in gaps.gaps_found %}
+                        <div class="gap-item">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-0">{{ gap.get('title', 'Unnamed Gap') }}</h6>
+                                <span class="gap-priority {{ gap.get('priority', 'medium')|lower }}">
+                                    {{ gap.get('priority', 'Medium') }}
+                                </span>
+                            </div>
+                            <p class="mb-2">{{ gap.get('description', 'No description available.') }}</p>
+                            {% if gap.get('suggestions') %}
+                                <small class="text-muted">
+                                    <strong>Suggestions:</strong> {{ gap.suggestions|join(', ') }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if gaps.get('recommendations') %}
+                    <h6>Recommendations</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for recommendation in gaps.recommendations %}
+                            <li class="list-group-item border-0 px-0">
+                                <i class="fas fa-arrow-right text-primary me-2"></i>{{ recommendation }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Raw Data (Collapsible) -->
+        <div class="result-section">
+            <div class="result-section-header">
+                <span><i class="fas fa-code"></i>Raw Data</span>
+                <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="collapse" data-bs-target="#rawData">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="collapse" id="rawData">
+                <div class="result-section-body">
+                    <pre class="bg-dark text-light p-3 rounded"><code>{{ result|tojson(indent=2) }}</code></pre>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh for processing tasks
+{% if task.status not in ['completed', 'failed'] %}
+setTimeout(function() {
+    location.reload();
+}, 5000); // Refresh every 5 seconds
+{% endif %}
+
+// Export functions
+function exportResults(format) {
+    const taskId = '{{ task_id }}';
+    const url = `/api/export/${taskId}?format=${format}`;
+    
+    // Create temporary download link
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `results_${taskId}.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Show toast notification
+    showToast(`Exporting results as ${format.toUpperCase()}...`, 'info');
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('liveToast');
+    const toastBody = toast.querySelector('.toast-body');
+    const toastIcon = toast.querySelector('.toast-header i');
+    
+    // Update content
+    toastBody.textContent = message;
+    
+    // Update icon based on type
+    toastIcon.className = `fas ${type === 'success' ? 'fa-check-circle text-success' : 
+                                type === 'error' ? 'fa-exclamation-circle text-danger' : 
+                                'fa-info-circle text-primary'} me-2`;
+    
+    // Show toast
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+}
+
+// Copy task ID to clipboard
+function copyTaskId() {
+    const taskId = '{{ task_id }}';
+    navigator.clipboard.writeText(taskId).then(function() {
+        showToast('Task ID copied to clipboard!', 'success');
+    });
+}
+</script>
+{% endblock %}

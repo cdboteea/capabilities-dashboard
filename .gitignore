@@ -1,0 +1,17 @@
+.DS_Store
+node_modules/
+__pycache__/
+*.pyc
+.env
+*.env
+*.secret
+/tmp/
+*.log
+.venv/
+venv/
+models/
+*.egg-info/
+dist/
+build/
+.cursor/
+.cursor-memory/

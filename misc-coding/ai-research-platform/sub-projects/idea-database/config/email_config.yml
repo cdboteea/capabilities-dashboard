@@ -1,0 +1,85 @@
+# Idea Database Email Configuration
+# This file can be easily updated when the real intake email is created
+
+email:
+  # Gmail API Configuration
+  service_account_key_path: "/app/config/gmail_service_account.json"
+  
+  # Intake Email Configuration
+  intake_email: "ideaseea@gmail.com"  # Primary ideas intake email
+  inbox_label: "INBOX"
+  processed_label: "ideas-processed"
+  error_label: "ideas-error"
+  
+  # Email Processing Settings
+  processing:
+    batch_size: 50
+    max_age_days: 30  # Only process emails from last 30 days
+    check_interval_minutes: 15
+    
+  # Content Type Detection
+  content_types:
+    email_body: true
+    attachments: true
+    urls: true
+    images: true  # Phase 1: Enabled with OCR support
+    
+    # Phase 1: Supported attachment types
+    supported_attachments:
+      - "application/pdf"
+      - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      - "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      - "application/msword"
+      - "application/vnd.ms-powerpoint"
+      - "image/png"
+      - "image/jpeg"
+      - "image/gif"
+      - "text/plain"
+      - "text/html"
+    
+  # Auto-categorization Keywords (DEPRECATED - Now using LLM-based categorization with database taxonomy)
+  # keywords:
+  #   personal_thoughts: ["idea:", "thought:", "explore:", "investigate:", "consider:"]
+  #   dev_tools: ["github.com", "pypi.org", "npm", "library", "framework", "tool"]
+  #   research_papers: ["arxiv", "doi:", "abstract", "methodology", "findings", "paper"]
+  #   ai_implementations: ["implementation", "use case", "workflow", "tutorial", "guide"]
+  #   industry_news: ["news", "company", "announcement", "release", "market"]
+  #   reference_materials: ["documentation", "tutorial", "how-to", "guide", "reference"]
+
+# Gmail API Scopes (Required permissions)
+scopes:
+  - "https://www.googleapis.com/auth/gmail.readonly"
+  - "https://www.googleapis.com/auth/gmail.modify"
+
+# Retry Configuration
+retry:
+  max_attempts: 3
+  backoff_factor: 2
+  max_wait_seconds: 300
+
+# Phase 1: Google Drive Integration
+drive:
+  folder_name: "idea-database-attachments"
+  folder_id: null  # Will be auto-created if not specified
+  max_file_size_mb: 100
+  deduplication: true
+  
+# Phase 1: Markdown Conversion Settings
+conversion:
+  max_file_size_mb: 50
+  ocr_languages: ["eng"]  # Tesseract language codes
+  pdf:
+    extract_images: true
+    extract_tables: true
+    max_pages: 100
+  images:
+    preprocessing: true
+    resize_threshold: 300  # Minimum dimension for OCR
+    confidence_threshold: 0.5
+  office:
+    extract_images: true
+    extract_tables: true
+  web:
+    clean_html: true
+    extract_links: true
+    max_content_length: 1000000  # 1MB 

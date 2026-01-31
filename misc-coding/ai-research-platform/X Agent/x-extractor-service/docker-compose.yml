@@ -1,0 +1,27 @@
+services:
+  x-extractor-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: x-extractor-service
+    ports:
+      - "3500:3500"
+    environment:
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+      - HOST=0.0.0.0
+      - PORT=3500
+    networks:
+      - x-extractor-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3500/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  x-extractor-network:
+    driver: bridge 

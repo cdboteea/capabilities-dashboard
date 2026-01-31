@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-brain me-2"></i>{{ app_name }}
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/' %}active{% endif %}" href="/">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/upload' %}active{% endif %}" href="/upload">
+                            <i class="fas fa-upload me-1"></i>Upload
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/health/detailed' %}active{% endif %}" href="/health/detailed">
+                            <i class="fas fa-heartbeat me-1"></i>Health
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/settings' %}active{% endif %}" href="/settings">
+                            <i class="fas fa-cog me-1"></i>Settings
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog me-1"></i>Settings
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/settings"><i class="fas fa-sliders-h me-2"></i>Analysis Settings</a></li>
+                            <li><a class="dropdown-item" href="/settings/export/json"><i class="fas fa-download me-2"></i>Export Data</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/health/detailed"><i class="fas fa-heartbeat me-2"></i>System Health</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showAbout()"><i class="fas fa-info-circle me-2"></i>About</a></li>
+                        </ul>
+                    </li>
+                    {% if processing_queue > 0 %}
+                    <li class="nav-item">
+                        <span class="navbar-text">
+                            <span class="badge bg-warning">{{ processing_queue }} processing</span>
+                        </span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light mt-5 py-3">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        © 2025 {{ app_name }} - AI Research Platform
+                    </small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>{{ current_time.strftime('%Y-%m-%d %H:%M UTC') }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', path='/js/main.js') }}"></script>
+    <script>
+    // About modal function
+    function showAbout() {
+        const aboutContent = `
+            <div class="modal fade" id="aboutModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-info-circle me-2"></i>About {{ app_name }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                                <h6>Twin-Report Knowledge Base</h6>
+                                <p class="text-muted">AI-Powered Research Intelligence Platform</p>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Version:</strong> v1.0.0
+                                </div>
+                                <div class="col-6">
+                                    <strong>Build:</strong> Frontend Interface
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6">
+                                    <strong>Services:</strong> 4 Active
+                                </div>
+                                <div class="col-6">
+                                    <strong>Status:</strong> <span class="badge bg-success">Operational</span>
+                                </div>
+                            </div>
+                            <hr>
+                            <h6>Features</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Multi-format document processing</li>
+                                <li><i class="fas fa-check text-success me-2"></i>AI-powered gap analysis</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Quality assessment & scoring</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Real-time health monitoring</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Comprehensive settings management</li>
+                            </ul>
+                            <small class="text-muted">
+                                Part of the AI Research Platform ecosystem
+                            </small>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="window.open('/health/detailed', '_blank')">
+                                <i class="fas fa-chart-line me-1"></i>System Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if present
+        const existingModal = document.getElementById('aboutModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', aboutContent);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('aboutModal'));
+        modal.show();
+        
+        // Clean up when modal is hidden
+        document.getElementById('aboutModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+    }
+    </script>
+    {% block extra_js %}{% endblock %}
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="liveToast" class="toast" role="alert">
+            <div class="toast-header">
+                <i class="fas fa-info-circle text-primary me-2"></i>
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body"></div>
+        </div>
+    </div>
+</body>
+</html> 

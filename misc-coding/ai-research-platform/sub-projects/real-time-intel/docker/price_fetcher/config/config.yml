@@ -1,0 +1,76 @@
+service:
+  name: "price-fetcher"
+  port: 8306
+  debug: false
+  workers: 4
+
+# Data source configuration
+data_sources:
+  primary: "yfinance"  # Primary data source
+  fallback: ["alpha_vantage", "iex_cloud", "finnhub"]  # Fallback sources
+  
+  # API configurations
+  alpha_vantage:
+    base_url: "https://www.alphavantage.co/query"
+    rate_limit: 5  # requests per minute
+    timeout: 30
+    
+  iex_cloud:
+    base_url: "https://cloud.iexapis.com/stable"
+    rate_limit: 100  # requests per second
+    timeout: 15
+    
+  finnhub:
+    base_url: "https://finnhub.io/api/v1"
+    rate_limit: 60  # requests per minute
+    timeout: 20
+    
+  yfinance:
+    rate_limit: 2000  # requests per hour
+    timeout: 30
+    batch_size: 50  # symbols per batch request
+
+# Caching configuration
+cache:
+  redis_url: "redis://redis:6379/2"
+  default_ttl: 300  # 5 minutes for real-time prices
+  extended_ttl: 3600  # 1 hour for historical data
+  market_hours_ttl: 60  # 1 minute during market hours
+  after_hours_ttl: 900  # 15 minutes after hours
+
+# Market hours (Eastern Time)
+market_hours:
+  timezone: "US/Eastern"
+  open_time: "09:30"
+  close_time: "16:00"
+  pre_market_start: "04:00"
+  after_hours_end: "20:00"
+
+# Price update intervals
+update_intervals:
+  real_time: 30  # seconds - active portfolio holdings
+  background: 300  # seconds - all other symbols
+  historical: 3600  # seconds - daily historical updates
+  
+# Data quality settings
+quality:
+  max_price_change_pct: 20  # Flag prices with >20% change
+  stale_data_threshold: 600  # seconds - consider data stale after 10 min
+  min_volume_threshold: 1000  # minimum daily volume
+  
+# Performance settings
+performance:
+  max_concurrent_requests: 50
+  request_timeout: 30
+  retry_attempts: 3
+  retry_delay: 1  # seconds
+  batch_processing: true
+  
+# Monitoring
+monitoring:
+  metrics_enabled: true
+  health_check_interval: 60
+  alert_thresholds:
+    error_rate: 0.05  # 5%
+    response_time_p95: 2000  # 2 seconds
+    cache_hit_rate: 0.80  # 80% 

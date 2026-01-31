@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Alert Summary - {{ total_count }} New Alerts{% endblock %}
+
+{% block content %}
+<div class="alert-title">
+    📊 Alert Summary - {{ total_count }} New Alerts
+</div>
+
+<div class="alert-meta">
+    <strong>Time Period:</strong> Recent alerts<br>
+    {% if high_priority_count > 0 %}
+    <strong>High Priority:</strong> {{ high_priority_count }} alerts<br>
+    {% endif %}
+    <strong>Generated:</strong> {{ created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+</div>
+
+<div class="alert-content">
+    {% if alert_groups %}
+        {% for group_key, group_alerts in alert_groups.items() %}
+            {% set group_priority = group_key.split('_')[0] %}
+            {% set group_type = group_key.split('_')[1] %}
+            
+            <div class="priority-{{ group_priority }}" style="margin-bottom: 20px;">
+                <h3>{{ group_priority.upper() }} - {{ group_type.replace('_', ' ').title() }} ({{ group_alerts|length }})</h3>
+                
+                {% for alert in group_alerts[:3] %}
+                <div style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+                    <strong>{{ alert.title }}</strong>
+                    {% if alert.asset_symbol %}<br><em>{{ alert.asset_symbol }}</em>{% endif %}
+                    <br><small>{{ alert.created_at.strftime('%H:%M:%S') }}</small>
+                </div>
+                {% endfor %}
+                
+                {% if group_alerts|length > 3 %}
+                <p><em>... and {{ group_alerts|length - 3 }} more {{ group_type.replace('_', ' ') }} alerts</em></p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        {% for alert in alerts[:5] %}
+        <div class="priority-{{ alert.priority.value }}" style="margin-bottom: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+            <strong>{{ alert.title }}</strong>
+            {% if alert.asset_symbol %}<br><em>{{ alert.asset_symbol }}</em>{% endif %}
+            <br>{{ alert.message[:100] }}{% if alert.message|length > 100 %}...{% endif %}
+            <br><small>{{ alert.created_at.strftime('%H:%M:%S') }}</small>
+        </div>
+        {% endfor %}
+        
+        {% if alerts|length > 5 %}
+        <p><em>... and {{ alerts|length - 5 }} more alerts</em></p>
+        {% endif %}
+    {% endif %}
+</div>
+
+<a href="#" class="button">View All Alerts</a>
+{% endblock %} 

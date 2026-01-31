@@ -1,0 +1,80 @@
+portfolio_analytics:
+  # Service configuration
+  host: "0.0.0.0"
+  port: 8308
+  debug: false
+  log_level: "INFO"
+  
+  # Database configuration
+  database:
+    host: "${DB_HOST:localhost}"
+    port: "${DB_PORT:5432}"
+    name: "${DB_NAME:ai_research_platform}"
+    user: "${DB_USER:postgres}"
+    password: "${DB_PASSWORD:}"
+    pool_size: 10
+    max_overflow: 20
+    
+  # Redis configuration for caching
+  redis:
+    host: "${REDIS_HOST:localhost}"
+    port: "${REDIS_PORT:6379}"
+    db: 4
+    password: "${REDIS_PASSWORD:}"
+    
+  # External service URLs
+  services:
+    price_fetcher_url: "http://price-fetcher:8306"
+    holdings_router_url: "http://holdings-router:8305"
+    sentiment_analyzer_url: "http://sentiment-analyzer:8304"
+    
+  # Analytics configuration
+  analytics:
+    # Performance calculation settings
+    risk_free_rate: 0.02  # 2% annual risk-free rate
+    trading_days_per_year: 252
+    benchmark_symbol: "SPY"  # S&P 500 ETF as benchmark
+    
+    # Time periods for analysis
+    periods:
+      short_term_days: 30
+      medium_term_days: 90
+      long_term_days: 365
+      
+    # Risk metrics
+    risk_metrics:
+      var_confidence: 0.05  # 95% VaR
+      cvar_confidence: 0.05  # 95% CVaR
+      max_lookback_days: 252  # 1 year for risk calculations
+      
+    # Correlation analysis
+    correlation:
+      min_correlation_threshold: 0.3
+      lookback_periods: [30, 90, 252]  # 1M, 3M, 1Y
+      
+    # Performance attribution
+    attribution:
+      sector_weights_threshold: 0.05  # 5% minimum for sector analysis
+      factor_analysis_enabled: true
+      
+  # Calculation settings
+  calculations:
+    # Cache settings
+    cache_ttl_seconds: 3600  # 1 hour
+    batch_size: 100
+    
+    # Update frequencies
+    real_time_update_seconds: 300  # 5 minutes
+    daily_update_hour: 6  # 6 AM UTC
+    weekly_update_day: 1  # Monday
+    
+    # Performance thresholds
+    significant_return_threshold: 0.05  # 5%
+    significant_volatility_threshold: 0.20  # 20%
+    
+  # Monitoring
+  monitoring:
+    enable_metrics: true
+    metrics_port: 9308
+    health_check_interval: 30
+    performance_logging: true 

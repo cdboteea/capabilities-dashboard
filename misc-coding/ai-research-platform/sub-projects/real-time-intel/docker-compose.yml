@@ -1,0 +1,475 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # NEWS CRAWLER - Enhanced modular implementation (Port 8300)
+  # ============================================================================
+  news-crawler:
+    build:
+      context: ./docker/news_crawler
+      dockerfile: Dockerfile.browser-use
+    container_name: real_time_intel_news_crawler
+    ports:
+      - "8300:8300"
+    environment:
+      # Service Configuration
+      - NEWS_CRAWLER_PORT=8300
+      - API_VERSION=v1
+      - DATABASE_URL=postgresql://ai_user:ai_platform_2024@real_time_intel_postgres:5432/ai_platform
+      
+      # Integration Endpoints
+      - EVENT_PROCESSOR_URL=http://event-processor:8303/events/webhook
+      - QUALITY_CONTROLLER_URL=http://quality-controller:8202
+      - SOURCE_MANAGER_URL=http://source-manager:8302
+      
+      # Quality Settings
+      - DEFAULT_QUALITY_THRESHOLD=0.8
+      - MAX_ARTICLES_PER_JOB=100
+      - JOB_TIMEOUT_MINUTES=30
+      
+      # Browser-Use Specific
+      - BROWSER_HEADLESS=true
+      - BROWSER_TIMEOUT=30000
+      - CRAWL_RATE_LIMIT=2.0
+      
+      # Future: Web Actions AI Agent Integration
+      - ADK_ORCHESTRATOR_URL=http://localhost:9011
+      - MCP_BRIDGE_URL=http://localhost:9020
+    volumes:
+      - ./config:/app/config:ro
+      - ./data/crawler_cache:/app/cache
+    depends_on:
+      - source-manager
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8300/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # MACRO WATCHER - Economic indicators monitoring (Port 8301)
+  # ============================================================================
+  macro-watcher:
+    build:
+      context: ./docker/macro_watcher
+      dockerfile: Dockerfile
+    container_name: real_time_intel_macro_watcher
+    ports:
+      - "8301:8301"
+    environment:
+      - MACRO_WATCHER_PORT=8301
+      - DATABASE_URL=postgresql://ai_user:ai_platform_2024@real_time_intel_postgres:5432/ai_platform
+      - EVENT_PROCESSOR_URL=http://event-processor:8303/events/webhook
+      - FED_DATA_API_KEY=${FED_DATA_API_KEY:-}
+      - BLS_API_KEY=${BLS_API_KEY:-}
+      - UPDATE_FREQUENCY=300  # 5 minutes
+    volumes:
+      - ./config:/app/config:ro
+      - ./data/macro_data:/app/data
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8301/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # SOURCE MANAGER - LLM-based source evaluation (Port 8302)
+  # ============================================================================
+  source-manager:
+    build:
+      context: ./docker/source_manager
+      dockerfile: Dockerfile
+    container_name: real_time_intel_source_manager
+    ports:
+      - "8302:8302"
+    environment:
+      - SOURCE_MANAGER_PORT=8302
+      - DATABASE_URL=postgresql://ai_user:ai_platform_2024@real_time_intel_postgres:5432/ai_platform
+      - MAC_STUDIO_LLM_ENDPOINT=${MAC_STUDIO_LLM_ENDPOINT}
+      - EVALUATION_FREQUENCY=604800  # Weekly (7 days)
+      - QUALITY_THRESHOLD=0.6  # Retirement threshold
+      - DISCOVERY_ENABLED=true
+    volumes:
+      - ./docker/source_manager/config:/app/config:ro
+      - ./data/source_evaluations:/app/data
+    depends_on:
+      - postgres
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8302/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # EVENT PROCESSOR - Content classification and routing (Port 8303)
+  # ============================================================================
+  event-processor:
+    build:
+      context: ./docker/event_processor
+      dockerfile: Dockerfile
+    container_name: real_time_intel_event_processor
+    ports:
+      - "8303:8303"
+    environment:
+      - EVENT_PROCESSOR_PORT=8303
+      - DATABASE_URL=postgresql://ai_user:ai_platform_2024@real_time_intel_postgres:5432/ai_platform
+      - MAC_STUDIO_LLM_ENDPOINT=${MAC_STUDIO_LLM_ENDPOINT}
+      - SENTIMENT_ANALYZER_URL=http://sentiment-analyzer:8304
+      - HOLDINGS_ROUTER_URL=http://holdings-router:8305
+      - CHROMA_URL=http://chroma:8000
+      - PROCESSING_QUEUE_SIZE=1000
+      - PARALLEL_WORKERS=5
+    volumes:
+      - ./docker/event_processor/config:/app/config:ro
+      - ./data/processed_events:/app/data
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8303/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # SENTIMENT ANALYZER - Enhanced financial sentiment analysis (Port 8304)
+  # ============================================================================
+  sentiment-analyzer:
+    build:
+      context: ./docker/sentiment_analyzer
+      dockerfile: Dockerfile
+    container_name: real_time_intel_sentiment_analyzer
+    ports:
+      - "8304:8304"
+    environment:
+      # Service Configuration
+      - SENTIMENT_ANALYZER_PORT=8304
+      - API_VERSION=v1
+      - DATABASE_URL=postgresql://ai_user:ai_platform_2024@real_time_intel_postgres:5432/ai_platform
+      
+      # Model Configuration
+      - SENTIMENT_MODEL_NAME=ProsusAI/finbert
+      - MAX_BATCH_SIZE=16
+      - MODEL_CACHE_DIR=/app/models
+      
+      # API Configuration
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:3001"]
+      - LOG_LEVEL=INFO
+      
+      # Background Processing
+      - BACKGROUND_WORKERS=2
+      - TASK_CLEANUP_HOURS=24
+      
+      # Performance Tuning
+      - TORCH_DEVICE=cpu
+      - TRANSFORMERS_CACHE=/app/models/transformers
+      - HF_HOME=/app/models/transformers
+      - TRANSFORMERS_OFFLINE=false
+    volumes:
+      - ./config:/app/config:ro
+      - ./models:/app/models
+      - ./data/sentiment_cache:/app/cache
+    depends_on:
+      - postgres
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+          cpus: '3.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8304/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================================================
+  # HOLDINGS ROUTER - Portfolio-aware event routing (Port 8305)
+  # ============================================================================
+  holdings-router:
+    build:
+      context: ./docker/holdings_router
+      dockerfile: Dockerfile
+    container_name: real_time_intel_holdings_router
+    ports:
+      - "8305:8305"
+    environment:
+      - HOLDINGS_ROUTER_PORT=8305
+      - DATABASE_URL=postgresql://ai_user:ai_platform_2024@real_time_intel_postgres:5432/ai_platform
+      - ALERT_ENGINE_URL=http://alert-engine:8307
+      - PORTFOLIO_UPDATE_FREQUENCY=3600  # 1 hour
+      - HIGH_RELEVANCE_THRESHOLD=0.8
+      - MEDIUM_RELEVANCE_THRESHOLD=0.5
+      - POSITION_SIZE_THRESHOLD=0.05  # 5% portfolio weight
+    volumes:
+      - ./config:/app/config:ro
+      - ./data/holdings:/app/data:ro
+    depends_on:
+      - postgres
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8305/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # PRICE FETCHER - Financial data integration (Port 8306)
+  # ============================================================================
+  price-fetcher:
+    build:
+      context: ./docker/price_fetcher
+      dockerfile: Dockerfile
+    container_name: real_time_intel_price_fetcher
+    ports:
+      - "8306:8306"
+    environment:
+      - PRICE_FETCHER_PORT=8306
+      - DATABASE_URL=postgresql://ai_user:ai_platform_2024@real_time_intel_postgres:5432/ai_platform
+      - YAHOO_FINANCE_ENABLED=true
+      - ALPHA_VANTAGE_API_KEY=${ALPHA_VANTAGE_API_KEY:-}
+      - HISTORICAL_ANALYZER_URL=http://historical-analyzer:8308
+      - UPDATE_FREQUENCY=86400  # Daily
+      - HISTORICAL_YEARS=10
+      - BATCH_SIZE=50
+      - REDIS_URL=redis://redis:6379/2
+    volumes:
+      - ./config:/app/config:ro
+      - ./data/price_history:/app/data
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8306/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # ALERT ENGINE - Multi-channel notification system (Port 8307)
+  # ============================================================================
+  alert-engine:
+    build:
+      context: ./docker/alert_engine
+      dockerfile: Dockerfile
+    container_name: real_time_intel_alert_engine
+    ports:
+      - "8307:8307"
+      - "9307:9307"  # Metrics port
+    environment:
+      # Service Configuration
+      - ALERT_ENGINE_PORT=8307
+      - API_VERSION=v1
+      - DATABASE_URL=postgresql://ai_user:ai_platform_2024@real_time_intel_postgres:5432/ai_platform
+      - REDIS_URL=redis://redis:6379/3
+      
+      # Email Configuration (SMTP)
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - FROM_EMAIL=${FROM_EMAIL:-alerts@research-platform.ai}
+      
+      # SMS Configuration (Twilio)
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-}
+      
+      # Push Notifications
+      - FCM_SERVER_KEY=${FCM_SERVER_KEY:-}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - VAPID_EMAIL=${VAPID_EMAIL:-alerts@research-platform.ai}
+      
+      # Rate Limits
+      - EMAIL_PER_HOUR=50
+      - SMS_PER_HOUR=20
+      - PUSH_PER_HOUR=100
+      - WEBHOOK_PER_HOUR=200
+      
+      # Features
+      - LOG_LEVEL=INFO
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:3001"]
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9307
+    volumes:
+      - ./config:/app/config:ro
+      - ./data/alert_logs:/app/data
+      - ./docker/alert_engine/templates:/app/templates:ro
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8307/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ============================================================================
+  # HISTORICAL ANALYZER - 10-year context database (Port 8308)
+  # ============================================================================
+  historical-analyzer:
+    build:
+      context: ./docker/historical_analyzer
+      dockerfile: Dockerfile
+    container_name: real_time_intel_historical_analyzer
+    ports:
+      - "8308:8308"
+    environment:
+      - HISTORICAL_ANALYZER_PORT=8308
+      - DATABASE_URL=postgresql://ai_user:ai_platform_2024@real_time_intel_postgres:5432/ai_platform
+      - MAC_STUDIO_LLM_ENDPOINT=${MAC_STUDIO_LLM_ENDPOINT}
+      - ANALYSIS_WINDOW_DAYS=30
+      - PATTERN_RECOGNITION_ENABLED=true
+      - STATISTICAL_SIGNIFICANCE_THRESHOLD=0.05
+      - IMPACT_TRACKING_PERIODS=1h,1d,1w,1m
+    volumes:
+      - ./config:/app/config:ro
+      - ./data/historical_analysis:/app/data
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8308/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # POSTGRESQL DATABASE - Main database for Real-Time Intel (Port 5432)
+  # ============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: real_time_intel_postgres
+    ports:
+      - "5433:5432"  # Avoid conflict with main platform PostgreSQL
+    environment:
+      - POSTGRES_DB=ai_platform
+      - POSTGRES_USER=ai_user
+      - POSTGRES_PASSWORD=ai_platform_2024
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - real_time_intel_postgres_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    networks:
+      - ai_platform
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_user -d ai_platform"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # REDIS - Cache and task queue (Port 6379)
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: real_time_intel_redis
+    ports:
+      - "6380:6379"  # Avoid conflict with main platform Redis
+    networks:
+      - ai_platform
+    volumes:
+      - real_time_intel_redis_data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  ai_platform:
+    external: true
+    name: airesearchplatform_ai_platform
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  real_time_intel_data:
+    driver: local
+  real_time_intel_postgres_data:
+    driver: local
+  real_time_intel_redis_data:
+    driver: local 

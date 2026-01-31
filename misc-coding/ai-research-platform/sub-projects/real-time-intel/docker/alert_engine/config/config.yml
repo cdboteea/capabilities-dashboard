@@ -1,0 +1,116 @@
+alert_engine:
+  # Service configuration
+  host: "0.0.0.0"
+  port: 8307
+  debug: false
+  log_level: "INFO"
+  
+  # Database configuration
+  database:
+    host: "${DB_HOST:localhost}"
+    port: "${DB_PORT:5432}"
+    name: "${DB_NAME:ai_research_platform}"
+    user: "${DB_USER:postgres}"
+    password: "${DB_PASSWORD:}"
+    pool_size: 10
+    max_overflow: 20
+    
+  # Redis configuration for caching and queues
+  redis:
+    host: "${REDIS_HOST:localhost}"
+    port: "${REDIS_PORT:6379}"
+    db: 3
+    password: "${REDIS_PASSWORD:}"
+    
+  # Email configuration
+  email:
+    smtp_host: "${SMTP_HOST:smtp.gmail.com}"
+    smtp_port: "${SMTP_PORT:587}"
+    smtp_user: "${SMTP_USER:}"
+    smtp_password: "${SMTP_PASSWORD:}"
+    from_email: "${FROM_EMAIL:alerts@research-platform.ai}"
+    from_name: "AI Research Platform"
+    use_tls: true
+    
+  # SMS configuration (Twilio)
+  sms:
+    twilio_account_sid: "${TWILIO_ACCOUNT_SID:}"
+    twilio_auth_token: "${TWILIO_AUTH_TOKEN:}"
+    from_number: "${TWILIO_FROM_NUMBER:}"
+    
+  # Push notification configuration
+  push:
+    fcm_server_key: "${FCM_SERVER_KEY:}"
+    vapid_public_key: "${VAPID_PUBLIC_KEY:}"
+    vapid_private_key: "${VAPID_PRIVATE_KEY:}"
+    vapid_email: "${VAPID_EMAIL:alerts@research-platform.ai}"
+    
+  # Webhook configuration
+  webhook:
+    timeout: 30
+    retry_attempts: 3
+    retry_delay: 5
+    
+  # Alert thresholds and rules
+  thresholds:
+    price_change:
+      minor: 2.0    # 2% change
+      moderate: 5.0 # 5% change
+      major: 10.0   # 10% change
+      critical: 20.0 # 20% change
+      
+    sentiment_score:
+      very_negative: -0.8
+      negative: -0.4
+      neutral_low: -0.1
+      neutral_high: 0.1
+      positive: 0.4
+      very_positive: 0.8
+      
+    portfolio_impact:
+      low: 1000     # $1K impact
+      medium: 5000  # $5K impact
+      high: 25000   # $25K impact
+      critical: 100000 # $100K impact
+      
+  # Rate limiting
+  rate_limits:
+    email_per_hour: 50
+    sms_per_hour: 20
+    push_per_hour: 100
+    webhook_per_hour: 200
+    
+  # Alert priorities
+  priorities:
+    low:
+      channels: ["email"]
+      delay_minutes: 30
+      batch_size: 10
+      
+    medium:
+      channels: ["email", "push"]
+      delay_minutes: 5
+      batch_size: 5
+      
+    high:
+      channels: ["email", "push", "sms"]
+      delay_minutes: 1
+      batch_size: 1
+      
+    critical:
+      channels: ["email", "push", "sms", "webhook"]
+      delay_minutes: 0
+      batch_size: 1
+      immediate: true
+      
+  # Template configuration
+  templates:
+    email_dir: "templates/email"
+    sms_dir: "templates/sms"
+    push_dir: "templates/push"
+    
+  # Monitoring
+  monitoring:
+    enable_metrics: true
+    metrics_port: 9307
+    health_check_interval: 30 

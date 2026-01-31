@@ -1,0 +1,275 @@
+version: '3.8'
+
+# Twin Report KB - Complete Microservices Architecture
+# Ports: 8100-8105 for backend services, 3000 for frontend
+
+services:
+  # ============================================================================
+  # POSTGRESQL DATABASE - Main database for Twin Report KB (Port 5434)
+  # ============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: twin_report_kb_postgres
+    ports:
+      - "5434:5432"  # Avoid conflict with other PostgreSQL instances
+    environment:
+      - POSTGRES_DB=twin_report_kb
+      - POSTGRES_USER=twin_report
+      - POSTGRES_PASSWORD=secure_password
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - twin_report_postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    networks:
+      - twin_report_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twin_report -d twin_report_kb"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # DOCUMENT PARSER - PDF/DOCX parsing and content extraction (Port 8100)
+  # ============================================================================
+  document-parser:
+    build:
+      context: ./docker/document_parser
+      dockerfile: Dockerfile
+    container_name: twin_report_kb_document_parser
+    ports:
+      - "8100:8000"
+    environment:
+      - DOCUMENT_PARSER_PORT=8000
+      - DATABASE_URL=postgresql://twin_report:secure_password@postgres:5432/twin_report_kb
+      - MAC_STUDIO_LLM_ENDPOINT=${MAC_STUDIO_LLM_ENDPOINT:-}
+      - MAX_FILE_SIZE=100MB
+      - SUPPORTED_FORMATS=pdf,docx,xlsx,pptx,txt,html,md
+      - PROCESSING_TIMEOUT=300
+    volumes:
+      - ./data/uploads:/app/uploads
+      - ./data/processed:/app/processed
+      - ./config:/app/config:ro
+    depends_on:
+      - postgres
+    networks:
+      - twin_report_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # TOPIC MANAGER - Topic extraction and classification (Port 8101)
+  # ============================================================================
+  topic-manager:
+    build:
+      context: ./docker/topic_manager
+      dockerfile: Dockerfile
+    container_name: twin_report_kb_topic_manager
+    ports:
+      - "8101:8101"
+    environment:
+      - TOPIC_MANAGER_PORT=8101
+      - DATABASE_URL=postgresql://twin_report:secure_password@postgres:5432/twin_report_kb
+      - MAC_STUDIO_LLM_ENDPOINT=${MAC_STUDIO_LLM_ENDPOINT:-}
+      - MAX_TOPICS_PER_DOCUMENT=20
+      - MIN_CONFIDENCE_THRESHOLD=0.1
+    volumes:
+      - ./models/topics:/app/models
+      - ./data/topic_cache:/app/cache
+      - ./config:/app/config:ro
+    depends_on:
+      - postgres
+    networks:
+      - twin_report_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+          cpus: '1.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8101/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # QUALITY CONTROLLER - Quality assessment and validation (Port 8102)
+  # ============================================================================
+  quality-controller:
+    build:
+      context: ./docker/quality_controller
+      dockerfile: Dockerfile
+    container_name: twin_report_kb_quality_controller
+    ports:
+      - "8102:8000"
+    environment:
+      - QUALITY_CONTROLLER_PORT=8000
+      - DATABASE_URL=postgresql://twin_report:secure_password@postgres:5432/twin_report_kb
+      - MAC_STUDIO_LLM_ENDPOINT=${MAC_STUDIO_LLM_ENDPOINT:-}
+      - QUALITY_THRESHOLD=0.7
+      - CITATION_CHECK_ENABLED=true
+      - FACT_VERIFICATION_ENABLED=true
+    volumes:
+      - ./data/quality_reports:/app/reports
+      - ./data/reference_sources:/app/references
+      - ./config:/app/config:ro
+    depends_on:
+      - postgres
+      - document-parser
+    networks:
+      - twin_report_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # DIFF WORKER - Document comparison and change detection (Port 8103)
+  # ============================================================================
+  diff-worker:
+    build:
+      context: ./docker/diff_worker
+      dockerfile: Dockerfile
+    container_name: twin_report_kb_diff_worker
+    ports:
+      - "8103:8000"
+    environment:
+      - DIFF_WORKER_PORT=8000
+      - DATABASE_URL=postgresql://twin_report:secure_password@postgres:5432/twin_report_kb
+      - MAC_STUDIO_LLM_ENDPOINT=${MAC_STUDIO_LLM_ENDPOINT:-}
+      - SIMILARITY_THRESHOLD=0.8
+      - CHANGE_DETECTION_ENABLED=true
+      - VERSION_TRACKING_ENABLED=true
+    volumes:
+      - ./data/diffs:/app/diffs
+      - ./data/versions:/app/versions
+      - ./config:/app/config:ro
+    depends_on:
+      - postgres
+    networks:
+      - twin_report_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+          cpus: '1.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # AUTHOR LOCAL REASONING - Local AI reasoning engine (Port 8104)
+  # ============================================================================
+  author-local-reasoning:
+    build:
+      context: ./docker/author_local_reasoning
+      dockerfile: Dockerfile
+    container_name: twin_report_kb_author_reasoning
+    ports:
+      - "8104:8000"
+    environment:
+      - AUTHOR_LOCAL_REASONING_PORT=8000
+      - DATABASE_URL=postgresql://twin_report:secure_password@postgres:5432/twin_report_kb
+      - MAC_STUDIO_LLM_ENDPOINT=${MAC_STUDIO_LLM_ENDPOINT:-}
+      - REASONING_MODEL=llama4:scout
+      - MAX_REASONING_DEPTH=5
+      - CONTEXT_WINDOW_SIZE=32000
+    volumes:
+      - ./models/reasoning:/app/models
+      - ./data/reasoning_cache:/app/cache
+      - ./config:/app/config:ro
+    depends_on:
+      - postgres
+    networks:
+      - twin_report_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+          cpus: '3.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================================================
+  # FRONTEND - Web interface for Twin Report KB (Port 3000)
+  # ============================================================================
+  frontend:
+    build:
+      context: ./docker/frontend
+      dockerfile: Dockerfile
+    container_name: twin_report_kb_frontend
+    ports:
+      - "3100:8000"  # Using 3100 to avoid conflict with idea-database frontend
+    environment:
+      - FRONTEND_PORT=8000
+      - API_BASE_URL=http://localhost
+      - DOCUMENT_PARSER_URL=http://document-parser:8000
+      - TOPIC_MANAGER_URL=http://topic-manager:8101
+      - QUALITY_CONTROLLER_URL=http://quality-controller:8000
+      - DIFF_WORKER_URL=http://diff-worker:8000
+      - AUTHOR_REASONING_URL=http://author-local-reasoning:8000
+    volumes:
+      - ./config:/app/config:ro
+    depends_on:
+      - document-parser
+      - topic-manager
+      - quality-controller
+      - diff-worker
+      - author-local-reasoning
+    networks:
+      - twin_report_network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  twin_report_network:
+    driver: bridge
+    name: twin_report_kb_network
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  twin_report_postgres_data:
+    driver: local
+    name: twin_report_kb_postgres_data 

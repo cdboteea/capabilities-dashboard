@@ -1,0 +1,32 @@
+# AI Research Platform Environment Configuration
+
+# Database Configuration
+DB_PASSWORD=ai_platform_secure_password
+POSTGRES_DB=ai_platform
+POSTGRES_USER=ai_user
+
+# MinIO Object Storage
+MINIO_PASSWORD=minio_secure_password
+MINIO_ROOT_USER=admin
+
+# Mac Studio LLM Endpoint
+MAC_STUDIO_ENDPOINT=https://matiass-mac-studio.tail174e9b.ts.net/v1
+MAC_STUDIO_API_KEY=ollama
+
+# Default Models
+DEFAULT_MODEL=deepseek-r1
+REASONING_MODEL=deepseek-r1
+GENERAL_MODEL=qwen3:32b
+VISION_MODEL=qwen2.5vl
+
+# Development Settings
+ENVIRONMENT=development
+LOG_LEVEL=info
+
+# Service Ports (for development)
+POSTGRES_PORT=5432
+CHROMA_PORT=8000
+MINIO_PORT=9000
+MINIO_CONSOLE_PORT=9001
+NATS_PORT=4222
+NATS_MONITOR_PORT=8222 

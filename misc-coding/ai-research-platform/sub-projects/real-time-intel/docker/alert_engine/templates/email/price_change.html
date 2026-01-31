@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Price Alert - {{ asset_symbol }}{% endblock %}
+
+{% block content %}
+<div class="priority-{{ priority }}">
+    <div class="alert-title">
+        {% if priority == 'critical' %}🚨{% elif priority == 'high' %}⚠️{% elif priority == 'medium' %}📢{% else %}ℹ️{% endif %}
+        {{ title }}
+    </div>
+    
+    <div class="alert-meta">
+        <strong>Asset:</strong> {{ asset_symbol }}<br>
+        <strong>Priority:</strong> {{ priority.upper() }}<br>
+        <strong>Type:</strong> Price Change Alert
+    </div>
+    
+    <div class="alert-content">
+        <p>{{ message }}</p>
+        
+        {% if summary %}
+        <p><em>{{ summary }}</em></p>
+        {% endif %}
+        
+        {% if data.current_price %}
+        <p><strong>Current Price:</strong> ${{ "%.2f"|format(data.current_price) }}</p>
+        {% endif %}
+        
+        {% if data.price_change %}
+        <p><strong>Price Change:</strong> 
+            <span style="color: {% if data.price_change > 0 %}#28a745{% else %}#dc3545{% endif %}">
+                {{ "%.2f"|format(data.price_change) }}%
+            </span>
+        </p>
+        {% endif %}
+        
+        {% if data.previous_price %}
+        <p><strong>Previous Price:</strong> ${{ "%.2f"|format(data.previous_price) }}</p>
+        {% endif %}
+    </div>
+    
+    <a href="#" class="button">View Portfolio</a>
+</div>
+{% endblock %} 

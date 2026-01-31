@@ -1,0 +1,95 @@
+# Event Processor Service Configuration
+
+# Service settings
+service:
+  name: "event_processor"
+  version: "1.0.0"
+  port: 8303
+  host: "0.0.0.0"
+  debug: false
+
+# Database configuration
+database:
+  url: "postgresql://postgres:password@postgres:5432/real_time_intel"
+  pool_min_size: 5
+  pool_max_size: 20
+  timeout: 60
+
+# Mac Studio LLM endpoint
+llm:
+  endpoint: "http://10.0.0.100:8000"
+  model: "qwen-3-72b:latest"
+  timeout: 60
+  max_retries: 3
+
+# Processing configuration
+processing:
+  # Classification settings
+  classification:
+    enabled: true
+    confidence_threshold: 0.6
+    fallback_event_type: "general_news"
+  
+  # Entity extraction settings
+  entity_extraction:
+    enabled: true
+    min_confidence: 0.5
+    max_entities_per_event: 50
+    ticker_validation: true
+  
+  # Content enrichment settings
+  enrichment:
+    enabled: true
+    sentiment_analysis: true
+    emotion_analysis: true
+    topic_extraction: true
+    financial_metrics: true
+    quality_assessment: true
+  
+  # Severity assessment settings
+  severity:
+    enabled: true
+    market_impact_weight: 0.35
+    company_impact_weight: 0.25
+    time_sensitivity_weight: 0.25
+    stakeholder_impact_weight: 0.15
+  
+  # Routing settings
+  routing:
+    enabled: true
+    portfolio_relevance_threshold: 0.5
+    immediate_routing_threshold: 0.9
+    high_priority_threshold: 0.7
+
+# Performance settings
+performance:
+  batch_size: 100
+  concurrent_processing: 10
+  processing_timeout: 300
+  memory_limit_mb: 2048
+
+# Monitoring and logging
+monitoring:
+  health_check_interval: 30
+  metrics_collection: true
+  performance_logging: true
+  error_tracking: true
+
+# Cleanup settings
+cleanup:
+  enabled: true
+  retention_days: 30
+  cleanup_interval_hours: 24
+
+# External services
+external_services:
+  news_crawler: "http://news_crawler:8300"
+  source_manager: "http://source_manager:8302"
+  holdings_router: "http://holdings_router:8305"
+  
+# Security settings
+security:
+  cors_enabled: true
+  cors_origins: ["*"]
+  rate_limiting: false
+  api_key_required: false 
