@@ -1,0 +1,13 @@
+{
+  "skill": "claude-app",
+  "currentVersion": "v1.0",
+  "productionVersion": null,
+  "versions": {
+    "v1.0": {
+      "timestamp": "2026-02-01T19:59:22Z",
+      "assessmentScore": 0,
+      "status": "development",
+      "changelog": "Converted to versioned development"
+    }
+  }
+}
