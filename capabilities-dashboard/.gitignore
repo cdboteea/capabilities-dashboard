@@ -1,5 +1,17 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+.next/
+out/
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,18 +19,86 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Environment & Secrets (CRITICAL - never commit these)
+.env
+.env.*
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+*.cert
+secrets/
+credentials/
+*.credentials
+*-credentials.json
+service-account*.json
+
+# API keys and tokens
+config.local.json
+*.secret
+*.token
+auth.json
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage & Testing
+coverage/
+.nyc_output/
+*.lcov
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*.swn
+*.sublime-workspace
+*.sublime-project
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+
+# OS files
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+.cache/
+.temp/
+tmp/
+
+# Package manager locks (optional - uncomment if you want to ignore)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Local config overrides
+*.local
+local.config.*
+
+# Task files (development only)
+TASK*.md
+
+# pm2
+ecosystem.config.cjs
+.pm2/
