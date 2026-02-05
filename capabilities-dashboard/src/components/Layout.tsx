@@ -199,9 +199,13 @@ function Layout({ children }: LayoutProps) {
       )}
 
       {/* Sidebar */}
-      <div
+      <aside
         className={cn(
-          "w-64 bg-card border-r border-border fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen overflow-y-auto",
+          "w-64 bg-card border-r border-border z-50 overflow-y-auto flex-shrink-0",
+          // Mobile: fixed with slide animation
+          "fixed inset-y-0 left-0 transform transition-transform duration-200 lg:transform-none",
+          // Desktop: static in flex layout (not fixed, not sticky - just normal flow)
+          "lg:static lg:inset-auto",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
@@ -243,10 +247,10 @@ function Layout({ children }: LayoutProps) {
             )
           })}
         </nav>
-      </div>
+      </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col lg:ml-0">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="bg-card border-b border-border px-4 lg:px-6 py-4">
           <div className="flex items-center justify-between">
