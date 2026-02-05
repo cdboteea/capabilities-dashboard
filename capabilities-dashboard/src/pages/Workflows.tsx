@@ -239,18 +239,21 @@ function Workflows() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="h-full overflow-auto">
-                <div className="h-full">
+              <CardContent className="h-[calc(100%-80px)] overflow-hidden">
+                <div className="h-full overflow-auto">
                   <SyntaxHighlighter
                     language="yaml"
                     style={isDark ? vscDarkPlus : oneLight}
-                    className="h-full text-sm"
                     customStyle={{
                       margin: 0,
                       padding: '16px',
                       background: 'transparent',
-                      fontSize: '14px'
+                      fontSize: '14px',
+                      overflow: 'visible',
+                      minWidth: 'max-content'
                     }}
+                    wrapLines={false}
+                    wrapLongLines={false}
                   >
                     {selectedWorkflow.content}
                   </SyntaxHighlighter>

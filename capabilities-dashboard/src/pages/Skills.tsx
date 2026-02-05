@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useToast } from '@/contexts/ToastContext'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { BookOpen, Tag, User, RefreshCw, Download } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
 
 interface Skill {
   name: string
@@ -18,6 +20,9 @@ function Skills() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null)
+  const [skillDetail, setSkillDetail] = useState<any>(null)
+  const [loadingDetail, setLoadingDetail] = useState(false)
   const { showToast } = useToast()
 
   useEffect(() => {
@@ -54,6 +59,21 @@ function Skills() {
       showToast('success', 'Skills exported successfully')
     } catch (err) {
       showToast('error', 'Failed to export skills')
+    }
+  }
+
+  const fetchSkillDetail = async (name: string) => {
+    setLoadingDetail(true)
+    try {
+      const response = await fetch(`/api/skills/${encodeURIComponent(name)}`)
+      if (!response.ok) throw new Error('Failed to fetch')
+      const data = await response.json()
+      setSkillDetail(data)
+      setSelectedSkill(name)
+    } catch (err) {
+      showToast('error', 'Failed to load skill details')
+    } finally {
+      setLoadingDetail(false)
     }
   }
 
@@ -126,7 +146,11 @@ function Skills() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {skills.map((skill) => (
-            <Card key={skill.name} className="hover:shadow-md transition-all duration-200 hover:scale-105 focus-within:ring-2 focus-within:ring-ring">
+            <Card
+              key={skill.name}
+              className="hover:shadow-md transition-all duration-200 hover:scale-[1.02] cursor-pointer"
+              onClick={() => fetchSkillDetail(skill.name)}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <BookOpen className="h-5 w-5" />
@@ -164,6 +188,39 @@ function Skills() {
           ))}
         </div>
       )}
+
+      {/* Skill Detail Modal */}
+      <Dialog open={!!selectedSkill} onOpenChange={() => setSelectedSkill(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              {selectedSkill}
+            </DialogTitle>
+          </DialogHeader>
+          {loadingDetail ? (
+            <div className="flex justify-center py-8">
+              <Spinner size="lg" />
+            </div>
+          ) : skillDetail ? (
+            <div className="overflow-y-auto max-h-[60vh] pr-4">
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <ReactMarkdown>{skillDetail.content}</ReactMarkdown>
+              </div>
+              {skillDetail.scripts?.length > 0 && (
+                <div className="mt-6 pt-4 border-t">
+                  <h4 className="font-medium mb-2">Scripts in this skill:</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    {skillDetail.scripts.map((s: string) => (
+                      <li key={s} className="font-mono">{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PlaySquare, Image, Music, Video, FileText, File, RefreshCw, FolderOpen } from 'lucide-react'
+import { PlaySquare, Image, Music, Video, FileText, File, RefreshCw, FolderOpen, Trash2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import { useToast } from '@/contexts/ToastContext'
 
 interface MediaFile {
   name: string
@@ -22,6 +23,7 @@ function Media() {
   const [selectedSubfolder, setSelectedSubfolder] = useState<string>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { showToast } = useToast()
 
   const subfolders = ['all', 'recordings', 'screenshots', 'transcripts', 'operator', 'research']
 
@@ -61,6 +63,24 @@ function Media() {
       }
     }
     setSelectedFile(file)
+  }
+
+  const deleteFile = async (file: MediaFile) => {
+    if (!confirm(`Delete "${file.name}"? This will move it to trash.`)) return
+
+    try {
+      const response = await fetch(
+        `/api/media/${file.subfolder}/${encodeURIComponent(file.name)}`,
+        { method: 'DELETE' }
+      )
+      if (!response.ok) throw new Error('Delete failed')
+
+      showToast('success', 'File moved to trash')
+      setSelectedFile(null)
+      fetchMediaFiles()
+    } catch (err) {
+      showToast('error', 'Failed to delete file')
+    }
   }
 
   const getFileIcon = (type: string) => {
@@ -299,14 +319,30 @@ function Media() {
         <div className="lg:col-span-2">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle>
-                {selectedFile ? selectedFile.name : 'Select a file to preview'}
-              </CardTitle>
-              {selectedFile && (
-                <CardDescription>
-                  {selectedFile.type} • {selectedFile.size} • {selectedFile.date}
-                </CardDescription>
-              )}
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle>
+                    {selectedFile ? selectedFile.name : 'Select a file to preview'}
+                  </CardTitle>
+                  {selectedFile && (
+                    <CardDescription>
+                      {selectedFile.type} • {selectedFile.size} • {selectedFile.date}
+                    </CardDescription>
+                  )}
+                </div>
+                {selectedFile && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => deleteFile(selectedFile)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    title="Delete file"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {selectedFile ? (

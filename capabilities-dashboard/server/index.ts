@@ -22,9 +22,9 @@ app.get('/api/skills', async (req, res) => {
   try {
     const skillsPath = path.join(process.env.HOME || '', 'clawd', 'skills')
     const entries = await fs.readdir(skillsPath, { withFileTypes: true })
-    
+
     const skills = []
-    
+
     for (const entry of entries) {
       if (entry.isDirectory()) {
         const skillPath = path.join(skillsPath, entry.name)
@@ -41,7 +41,7 @@ app.get('/api/skills', async (req, res) => {
         try {
           const skillMdPath = path.join(skillPath, 'SKILL.md')
           const content = await fs.readFile(skillMdPath, 'utf-8')
-          
+
           // Parse basic metadata from SKILL.md content
           const lines = content.split('\n')
           for (const line of lines) {
@@ -71,6 +71,42 @@ app.get('/api/skills', async (req, res) => {
   } catch (error) {
     console.error('Error fetching skills:', error)
     res.status(500).json({ error: 'Failed to fetch skills' })
+  }
+})
+
+app.get('/api/skills/:name', async (req, res) => {
+  try {
+    const { name } = req.params
+    const skillPath = path.join(process.env.HOME || '', 'clawd', 'skills', name)
+
+    // Security check
+    const resolvedPath = path.resolve(skillPath)
+    const resolvedSkillsBase = path.resolve(path.join(process.env.HOME || '', 'clawd', 'skills'))
+    if (!resolvedPath.startsWith(resolvedSkillsBase)) {
+      return res.status(403).json({ error: 'Access denied' })
+    }
+
+    const skillMdPath = path.join(skillPath, 'SKILL.md')
+    const content = await fs.readFile(skillMdPath, 'utf-8')
+
+    // Get list of files in skill directory
+    const entries = await fs.readdir(skillPath, { withFileTypes: true })
+    const files = entries.filter(e => e.isFile()).map(e => e.name)
+    const scripts = files.filter(f => f.endsWith('.sh') || f.endsWith('.py') || f.endsWith('.js'))
+
+    res.json({
+      name,
+      content,
+      files,
+      scripts,
+      path: skillPath
+    })
+  } catch (error: any) {
+    console.error('Error fetching skill:', error)
+    if (error.code === 'ENOENT') {
+      return res.status(404).json({ error: 'Skill not found' })
+    }
+    res.status(500).json({ error: 'Failed to fetch skill' })
   }
 })
 
@@ -528,27 +564,41 @@ app.get('/api/agents', async (req, res) => {
   }
 })
 
-// Cron Jobs API endpoint (proxy to OpenClaw gateway)
+// Helper to format schedule object
+function formatSchedule(schedule: any): string {
+  if (!schedule) return 'Unknown'
+  if (schedule.kind === 'cron') return schedule.expr
+  if (schedule.kind === 'every') return `Every ${Math.round(schedule.everyMs / 60000)} min`
+  if (schedule.kind === 'at') return `At ${new Date(schedule.atMs).toLocaleString()}`
+  return JSON.stringify(schedule)
+}
+
+// Cron Jobs API endpoint
 app.get('/api/cron', async (req, res) => {
   try {
-    const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL || 'http://localhost:8080'
+    // Read from OpenClaw cron jobs file
+    const cronPath = path.join(process.env.HOME || '', '.openclaw', 'cron', 'jobs.json')
+    const cronContent = await fs.readFile(cronPath, 'utf-8')
+    const cronData = JSON.parse(cronContent)
 
-    try {
-      const response = await fetch(`${gatewayUrl}/api/cron`)
+    // Jobs are stored in cronData.jobs array
+    const jobs = cronData.jobs || []
 
-      if (!response.ok) {
-        throw new Error(`Gateway responded with status: ${response.status}`)
-      }
+    const formattedJobs = jobs.map((job: any) => ({
+      id: job.id,
+      name: job.name || 'Unnamed Job',
+      schedule: formatSchedule(job.schedule),
+      nextRun: job.state?.nextRunAtMs ? new Date(job.state.nextRunAtMs).toLocaleString() : 'Unknown',
+      lastRun: job.state?.lastRunAtMs ? new Date(job.state.lastRunAtMs).toLocaleString() : null,
+      lastStatus: job.state?.lastStatus || 'pending',
+      description: job.payload?.text?.substring(0, 150) || job.description || '',
+      enabled: job.enabled !== false
+    }))
 
-      const cronJobs = await response.json()
-      res.json(cronJobs)
-    } catch (error) {
-      // If gateway is not available, return mock data or empty array
-      res.json([])
-    }
+    res.json(formattedJobs)
   } catch (error) {
-    console.error('Error fetching cron jobs:', error)
-    res.status(500).json({ error: 'Failed to fetch cron jobs' })
+    console.error('Error fetching cron:', error)
+    res.json([])
   }
 })
 
@@ -572,31 +622,37 @@ app.get('/api/status', async (req, res) => {
       timestamp: new Date().toISOString()
     }
 
-    // Try to read OpenClaw config for version
-    const openclawConfigPath = path.join(process.env.HOME || '', '.openclaw', 'openclaw.json')
+    // Get OpenClaw version
     try {
-      const configContent = await fs.readFile(openclawConfigPath, 'utf-8')
-      const config = JSON.parse(configContent)
-      status.openclaw.version = config.version || 'unknown'
+      const { stdout } = await execAsync('openclaw --version 2>/dev/null || echo "unknown"')
+      status.openclaw.version = stdout.trim() || 'unknown'
+    } catch {
+      // Command failed, keep unknown
+    }
 
-      // Calculate uptime if we have a start timestamp
-      if (config.startTime) {
-        const startTime = new Date(config.startTime)
-        const uptime = Date.now() - startTime.getTime()
-        const hours = Math.floor(uptime / (1000 * 60 * 60))
-        const days = Math.floor(hours / 24)
-        status.openclaw.uptime = days > 0 ? `${days}d ${hours % 24}h` : `${hours}h`
-      }
-
-      // Get session info if available
-      if (config.session) {
-        status.session.contextUsage = config.session.contextUsage || 'unknown'
-        status.session.model = config.session.model || 'unknown'
-        status.session.contextPercent = config.session.contextPercent || 0
+    // Get context usage via check-context.sh
+    try {
+      const { stdout } = await execAsync('~/clawd/scripts/check-context.sh 2>/dev/null | head -1')
+      // Parse: "📊 Context: 26745/200K tokens (13%)"
+      const match = stdout.match(/(\d+)\/(\d+)K tokens \((\d+)%\)/)
+      if (match) {
+        status.session.contextUsage = `${match[1]}/${match[2]}K tokens`
+        status.session.contextPercent = parseInt(match[3])
       }
     } catch {
-      // Config doesn't exist or can't be read
+      // Script failed, keep unknown
     }
+
+    // Get uptime from gateway process
+    try {
+      const { stdout } = await execAsync('ps -o etime= -p $(pgrep -f "openclaw" | head -1) 2>/dev/null')
+      status.openclaw.uptime = stdout.trim() || 'unknown'
+    } catch {
+      // Process not found, keep unknown
+    }
+
+    // Get model from environment or config
+    status.session.model = process.env.OPENCLAW_MODEL || 'claude-opus-4-5'
 
     // Try to get recent activity from clawd memory
     const memoryPath = path.join(process.env.HOME || '', 'clawd', 'memory')
@@ -852,6 +908,39 @@ app.get('/api/media/:subfolder/:filename', async (req, res) => {
   } catch (error) {
     console.error('Error serving media file:', error)
     res.status(404).json({ error: 'File not found' })
+  }
+})
+
+app.delete('/api/media/:subfolder/:filename', async (req, res) => {
+  try {
+    const { subfolder, filename } = req.params
+    const mediaPath = path.join(process.env.HOME || '', 'clawd', 'media', subfolder, filename)
+
+    // Security check
+    const resolvedPath = path.resolve(mediaPath)
+    const resolvedMediaBase = path.resolve(path.join(process.env.HOME || '', 'clawd', 'media'))
+    if (!resolvedPath.startsWith(resolvedMediaBase)) {
+      return res.status(403).json({ error: 'Access denied' })
+    }
+
+    // Check if file exists
+    await fs.access(mediaPath)
+
+    // Use trash command for safety (recoverable delete)
+    try {
+      await execAsync(`trash "${mediaPath}"`)
+    } catch {
+      // Fallback to unlink if trash not available
+      await fs.unlink(mediaPath)
+    }
+
+    res.json({ success: true, message: 'File moved to trash' })
+  } catch (error: any) {
+    console.error('Error deleting media file:', error)
+    if (error.code === 'ENOENT') {
+      return res.status(404).json({ error: 'File not found' })
+    }
+    res.status(500).json({ error: 'Failed to delete file' })
   }
 })
 
