@@ -201,7 +201,7 @@ function Layout({ children }: LayoutProps) {
       {/* Sidebar */}
       <div
         className={cn(
-          "w-64 bg-card border-r border-border fixed lg:static inset-y-0 left-0 z-50 transform transition-transform duration-200",
+          "w-64 bg-card border-r border-border fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen overflow-y-auto",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >

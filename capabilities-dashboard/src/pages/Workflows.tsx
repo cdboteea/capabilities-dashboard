@@ -141,7 +141,7 @@ function Workflows() {
         {totalWorkflows} workflows across {workflows.length} apps
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
         {/* Left column: Workflow groups */}
         <div className="space-y-4">
           {workflows.map((group) => (
@@ -240,7 +240,7 @@ function Workflows() {
                 </div>
               </CardHeader>
               <CardContent className="h-[calc(100%-80px)] overflow-hidden">
-                <div className="h-full overflow-auto">
+                <div className="h-full code-viewer">
                   <SyntaxHighlighter
                     language="yaml"
                     style={isDark ? vscDarkPlus : oneLight}
